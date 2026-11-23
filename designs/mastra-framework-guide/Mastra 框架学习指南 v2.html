@@ -462,6 +462,7 @@
       <a class="sub" href="#update-streams">Resumable streams</a>
       <a class="sub" href="#update-workflow">Workflow state</a>
       <a class="sub" href="#update-approval">审批修复</a>
+      <a class="sub" href="#update-storage-v2">Storage v2 瘦身</a>
       <a class="sub" href="#update-mcp">MCP 2.6–2.10</a>
       <a class="sub" href="#update-client">client-js 重试</a>
       <a class="sub" href="#update-memory">memory 修复</a>
@@ -1974,6 +1975,13 @@ server {
 
       <h3 id="update-approval">审批安全修复（1.85.0）</h3>
       <p>修复了 resume 后 tool call 绕过审批的洞：模型一次回复里调了多个工具、其中一个 suspend 或等审批时，resume 之后同批的另一个工具可能不问就跑。影响调用级 <code>requireToolApproval</code> 函数和所有 <code>createEventedAgent</code> 的审批策略。现在都会问。相关语义：调用级函数不随 run 存储，resume 时不再传它的话，之后每个工具都要审批。用到审批的应升到 1.85.0。</p>
+
+      <h3 id="update-storage-v2">Storage v2 瘦身与 pruneSnapshot（1.86.0）</h3>
+      <ul>
+        <li>实验性 <code>storageVersion: 2</code> 现在支持 <code>pruneSnapshot</code>：以前一起用会抛错。钩子在 run 结束时跑一次，拿到全部 step 结果，用来替换（不是删除）step 结果；挂起中的 run 不清理，因为后面的步骤要从存储读前面的结果；嵌套 run 从父级继承 v2 时也不清理。run 的最终 result 保留未裁剪的结果。</li>
+        <li>v2 自动瘦身：step 重写时删旧行（含 <code>foreach</code> 进度）；run 结束时删掉 run 和嵌套 run 都不再读的旧状态版本。durable agent 在 pg 上等审批时，存下的 run 从 275 kB 降到 132 kB。</li>
+        <li>存储升级：<code>init()</code> 给 <code>mastra_workflow_run_entries</code> 加 <code>first_seq</code> 列，保持 step 首次写入的顺序；升级前的老 run 照常工作。pg / libsql 现在要求 <code>@mastra/core</code> ≥ 1.86.0。</li>
+      </ul>
 
       <h3 id="update-mcp">MCP 2.6 → 2.10</h3>
       <ul>
