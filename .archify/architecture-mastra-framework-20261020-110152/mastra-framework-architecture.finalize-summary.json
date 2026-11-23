@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\code\\mastra\\.archify\\architecture-mastra-framework-20261020-110152\\candidate.json",
+    "sha256": "3109286d1c7a9e6321c2b7220f17c305bd10e896f459587977b5905b628476e0",
+    "bytes": 6911
+  },
+  "artifact": {
+    "path": "D:\\code\\mastra\\.archify\\architecture-mastra-framework-20261020-110152\\mastra-framework-architecture.html",
+    "sha256": "bc456ab4362aaa4797bbaae72eba56271541ef7368530294e0f90cc134c83835",
+    "bytes": 840756
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\code\\mastra\\.archify\\architecture-mastra-framework-20261020-110152\\mastra-framework-architecture.finalize.json",
+    "summaryReceipt": "D:\\code\\mastra\\.archify\\architecture-mastra-framework-20261020-110152\\mastra-framework-architecture.finalize-summary.json",
+    "browserCheckReceipt": "D:\\code\\mastra\\.archify\\architecture-mastra-framework-20261020-110152\\mastra-framework-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-20T03:15:06.258Z",
+    "source": "network",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 7534,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

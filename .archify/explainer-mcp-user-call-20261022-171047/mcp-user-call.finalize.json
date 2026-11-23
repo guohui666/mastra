@@ -1,0 +1,630 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "explainer",
+  "quality": "showcase",
+  "startedAt": "2026-10-22T09:13:08.764Z",
+  "specification": {
+    "path": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\candidate.archify.md",
+    "sha256": "b48d390082ce0ab36770f74c8718f790fb60ec2ff88b3441e80840881d66e2ff",
+    "bytes": 14058
+  },
+  "artifact": {
+    "path": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.html",
+    "sha256": "083f9a032926bc3be4c85360dbd626ef6b0c0c466f0dae724afbacf49009b6ae",
+    "bytes": 1356518
+  },
+  "stages": {
+    "browser-check": {
+      "status": "not-run",
+      "execution": "not-requested"
+    },
+    "validate": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": null,
+      "execution": "embedded-in-deliver",
+      "command": [
+        "d:\\nvm4w\\nodejs\\node.exe",
+        "D:\\users\\jr10003325\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "explainer",
+        "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\candidate.archify.md",
+        "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "ok": true,
+        "command": "validate",
+        "specification": {
+          "sha256": "b48d390082ce0ab36770f74c8718f790fb60ec2ff88b3441e80840881d66e2ff",
+          "bytes": 14058
+        },
+        "validation": {
+          "checksPassed": 4,
+          "checkCount": 4,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        }
+      }
+    },
+    "deliver": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 1595,
+      "command": [
+        "d:\\nvm4w\\nodejs\\node.exe",
+        "D:\\users\\jr10003325\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "deliver",
+        "explainer",
+        "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\candidate.archify.md",
+        "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.html",
+        "--quality",
+        "showcase",
+        "--json"
+      ],
+      "receipt": {
+        "schemaVersion": 1,
+        "receiptId": "81789a8e-3769-4bbc-9015-cb9eb2567c3c",
+        "ok": true,
+        "command": "deliver",
+        "type": "explainer",
+        "input": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\candidate.archify.md",
+        "output": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.html",
+        "explainer": {
+          "preparedSha256": "edf691017e1719b5223e9b80b6432449923a88051bc84344811f33fcf85dd105",
+          "dependencies": [
+            {
+              "kind": "diagram-spec",
+              "id": "handle-flow",
+              "inline": true,
+              "sha256": "edfb55287023831190708bd145834ddf5c0b5fdd6429e35832a3bb2766eeb036",
+              "bytes": 1425
+            },
+            {
+              "kind": "diagram-spec",
+              "id": "old-reply-flow",
+              "inline": true,
+              "sha256": "98646c3e3ac12551b66fa96b1a38d7a8a0124fbd228dd76b3311281f3d81e642",
+              "bytes": 1347
+            },
+            {
+              "kind": "diagram-spec",
+              "id": "new-reply-flow",
+              "inline": true,
+              "sha256": "5c2d88785df159d807d9d8fee597c21bab0778a33633a27c9f8e98dfc09baf8a",
+              "bytes": 965
+            }
+          ]
+        },
+        "specification": {
+          "sha256": "b48d390082ce0ab36770f74c8718f790fb60ec2ff88b3441e80840881d66e2ff",
+          "bytes": 14058
+        },
+        "artifact": {
+          "sha256": "083f9a032926bc3be4c85360dbd626ef6b0c0c466f0dae724afbacf49009b6ae",
+          "bytes": 1356518
+        },
+        "validation": {
+          "checksPassed": 4,
+          "checkCount": 4,
+          "compositionProfile": "showcase",
+          "compositionStatus": "pass",
+          "errors": 0,
+          "warnings": 0
+        },
+        "update": {
+          "status": "unavailable",
+          "installedVersion": null,
+          "availableVersion": null,
+          "releaseNotes": null,
+          "checkedAt": null,
+          "source": null,
+          "noticeRequired": false,
+          "noticeText": null,
+          "reason": "disabled"
+        }
+      }
+    },
+    "check": {
+      "status": "pass",
+      "exitCode": 0,
+      "durationMs": 698,
+      "command": [
+        "d:\\nvm4w\\nodejs\\node.exe",
+        "D:\\users\\jr10003325\\.agents\\skills\\archify\\bin\\archify.mjs",
+        "check",
+        "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.html",
+        "--require-provenance"
+      ],
+      "receipt": {
+        "ok": true,
+        "file": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.html",
+        "family": "explainer",
+        "artifact": {
+          "sha256": "083f9a032926bc3be4c85360dbd626ef6b0c0c466f0dae724afbacf49009b6ae",
+          "bytes": 1356518
+        },
+        "checks": [
+          {
+            "name": "explainer_structure",
+            "ok": true,
+            "details": [
+              "150 unique DOM IDs"
+            ]
+          },
+          {
+            "name": "explainer_payload_identity",
+            "ok": true,
+            "details": []
+          },
+          {
+            "name": "explainer_dependencies",
+            "ok": true,
+            "details": [
+              "3 frozen dependencies"
+            ]
+          },
+          {
+            "name": "explainer_native_diagrams",
+            "ok": true,
+            "details": [
+              "handle-flow: pass",
+              "old-reply-flow: pass",
+              "new-reply-flow: pass"
+            ]
+          }
+        ],
+        "composition": {
+          "schemaVersion": 1,
+          "profile": "showcase",
+          "status": "pass",
+          "summary": {
+            "errors": 0,
+            "warnings": 0
+          },
+          "issues": [],
+          "nativeDiagrams": [
+            {
+              "id": "handle-flow",
+              "receipt": {
+                "ok": true,
+                "file": "C:\\Users\\JR1000~1\\AppData\\Local\\Temp\\archify-explainer-check-9nR0nt\\child.html",
+                "artifact": {
+                  "sha256": "087fd39a668e516632c70c42ab892fad250012cf9c34846dda256a57d5cba04e",
+                  "bytes": 815150
+                },
+                "checks": [
+                  {
+                    "name": "single_svg",
+                    "ok": true,
+                    "details": [
+                      "found 1 <svg> block(s)"
+                    ]
+                  },
+                  {
+                    "name": "finite_svg",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "orthogonal_arrows",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "label_route_clearance",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_crossings",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_corridors",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "container_border_runs",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "route_rhythm",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "legend_clearance",
+                    "ok": true,
+                    "details": []
+                  }
+                ],
+                "composition": {
+                  "schemaVersion": 1,
+                  "profile": "showcase",
+                  "status": "pass",
+                  "summary": {
+                    "errors": 0,
+                    "warnings": 0
+                  },
+                  "metrics": {
+                    "properCrossings": 0,
+                    "resolvedCrossovers": 0,
+                    "ambiguousCorridors": 0,
+                    "arrowheadCollisions": 0,
+                    "containerBorderRuns": 0,
+                    "labelRouteClearanceIssues": 0,
+                    "labelCanvasOverflowIssues": 0,
+                    "minLabelRouteClearance": 53.3,
+                    "desktopReadabilityIssues": 0,
+                    "viewportHeightIssues": 0,
+                    "minProjectedNodeTextPx": 8,
+                    "maxBends": 0,
+                    "routesOverSuggestedBends": 0,
+                    "maxStretch": 1,
+                    "routesOverSuggestedStretch": 0,
+                    "minSegmentPx": 13,
+                    "minInteriorSegmentPx": null,
+                    "shortSegmentCount": 2,
+                    "shortEndpointSegmentCount": 2,
+                    "shortInteriorSegmentCount": 0,
+                    "microSegmentCount": 0
+                  },
+                  "suggestedLimits": {
+                    "bendsPerRelationship": 2,
+                    "stretch": 1.35,
+                    "segmentPx": 16,
+                    "microSegmentPx": 8
+                  },
+                  "routeReview": {
+                    "crossings": [],
+                    "detours": []
+                  },
+                  "leadingSpace": {
+                    "measured": false,
+                    "reviewSuggested": false
+                  },
+                  "desktopReadability": {
+                    "budgetBasis": "legacy-930",
+                    "readerContract": "declared-wide-v1",
+                    "availableDiagramWidth": 930,
+                    "actualBudgetPx": 930,
+                    "limit": "legacy",
+                    "requestedTargetPx": null,
+                    "requestedTargetMet": null,
+                    "hardFloorPx": 6,
+                    "hardFloorMet": true,
+                    "minimumOwner": {
+                      "kind": "edge",
+                      "id": "need-to-bad-1",
+                      "from": "need",
+                      "to": "bad"
+                    },
+                    "minimumSourceTextPx": 8,
+                    "minimumProjectedTextPx": 8,
+                    "semanticTextCount": 14
+                  },
+                  "issues": []
+                }
+              }
+            },
+            {
+              "id": "old-reply-flow",
+              "receipt": {
+                "ok": true,
+                "file": "C:\\Users\\JR1000~1\\AppData\\Local\\Temp\\archify-explainer-check-rjAnsN\\child.html",
+                "artifact": {
+                  "sha256": "2ec92710bfa5e77bbc1bf5dd3e40c6703a9cf37049e5369fefbb4f7502d3ffa2",
+                  "bytes": 808339
+                },
+                "checks": [
+                  {
+                    "name": "single_svg",
+                    "ok": true,
+                    "details": [
+                      "found 1 <svg> block(s)"
+                    ]
+                  },
+                  {
+                    "name": "finite_svg",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "orthogonal_arrows",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "label_route_clearance",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_crossings",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_corridors",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "container_border_runs",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "route_rhythm",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "legend_clearance",
+                    "ok": true,
+                    "details": []
+                  }
+                ],
+                "composition": {
+                  "schemaVersion": 1,
+                  "profile": "showcase",
+                  "status": "pass",
+                  "summary": {
+                    "errors": 0,
+                    "warnings": 0
+                  },
+                  "metrics": {
+                    "properCrossings": 0,
+                    "resolvedCrossovers": 0,
+                    "ambiguousCorridors": 0,
+                    "arrowheadCollisions": 0,
+                    "containerBorderRuns": 0,
+                    "labelRouteClearanceIssues": 0,
+                    "labelCanvasOverflowIssues": 0,
+                    "minLabelRouteClearance": 28,
+                    "desktopReadabilityIssues": 0,
+                    "viewportHeightIssues": 0,
+                    "minProjectedNodeTextPx": 11,
+                    "maxBends": 0,
+                    "routesOverSuggestedBends": 0,
+                    "maxStretch": 1,
+                    "routesOverSuggestedStretch": 0,
+                    "minSegmentPx": 254,
+                    "minInteriorSegmentPx": null,
+                    "shortSegmentCount": 0,
+                    "shortEndpointSegmentCount": 0,
+                    "shortInteriorSegmentCount": 0,
+                    "microSegmentCount": 0
+                  },
+                  "suggestedLimits": {
+                    "bendsPerRelationship": 2,
+                    "stretch": 1.35,
+                    "segmentPx": 16,
+                    "microSegmentPx": 8
+                  },
+                  "routeReview": {
+                    "crossings": [],
+                    "detours": []
+                  },
+                  "leadingSpace": {
+                    "measured": false,
+                    "reviewSuggested": false
+                  },
+                  "sequenceColumnSpace": {
+                    "measured": true,
+                    "columnFit": "spread",
+                    "participantCount": 2,
+                    "occupiedRight": 520,
+                    "viewBoxLeft": 0,
+                    "canvasWidth": 560,
+                    "emptyRightPx": 40,
+                    "emptyRightRatio": 0.071,
+                    "typicalParticipantWidth": 190,
+                    "reviewSuggested": false
+                  },
+                  "desktopReadability": {
+                    "budgetBasis": "legacy-930",
+                    "readerContract": "declared-wide-v1",
+                    "availableDiagramWidth": 930,
+                    "actualBudgetPx": 930,
+                    "limit": "legacy",
+                    "requestedTargetPx": null,
+                    "requestedTargetMet": null,
+                    "hardFloorPx": 6,
+                    "hardFloorMet": true,
+                    "minimumOwner": {
+                      "kind": "edge",
+                      "id": "orc-to-ors-1",
+                      "from": "orc",
+                      "to": "ors"
+                    },
+                    "minimumSourceTextPx": 11,
+                    "minimumProjectedTextPx": 11,
+                    "semanticTextCount": 12
+                  },
+                  "issues": []
+                }
+              }
+            },
+            {
+              "id": "new-reply-flow",
+              "receipt": {
+                "ok": true,
+                "file": "C:\\Users\\JR1000~1\\AppData\\Local\\Temp\\archify-explainer-check-Bym8p9\\child.html",
+                "artifact": {
+                  "sha256": "ab654aaea88be66046c5bc5cf9ecf0c6ae5bf53bfa189d4c70c5b090364952f9",
+                  "bytes": 804842
+                },
+                "checks": [
+                  {
+                    "name": "single_svg",
+                    "ok": true,
+                    "details": [
+                      "found 1 <svg> block(s)"
+                    ]
+                  },
+                  {
+                    "name": "finite_svg",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "orthogonal_arrows",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "label_route_clearance",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_crossings",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "relationship_corridors",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "container_border_runs",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "route_rhythm",
+                    "ok": true,
+                    "details": []
+                  },
+                  {
+                    "name": "legend_clearance",
+                    "ok": true,
+                    "details": []
+                  }
+                ],
+                "composition": {
+                  "schemaVersion": 1,
+                  "profile": "showcase",
+                  "status": "pass",
+                  "summary": {
+                    "errors": 0,
+                    "warnings": 0
+                  },
+                  "metrics": {
+                    "properCrossings": 0,
+                    "resolvedCrossovers": 0,
+                    "ambiguousCorridors": 0,
+                    "arrowheadCollisions": 0,
+                    "containerBorderRuns": 0,
+                    "labelRouteClearanceIssues": 0,
+                    "labelCanvasOverflowIssues": 0,
+                    "minLabelRouteClearance": 28,
+                    "desktopReadabilityIssues": 0,
+                    "viewportHeightIssues": 0,
+                    "minProjectedNodeTextPx": 11,
+                    "maxBends": 0,
+                    "routesOverSuggestedBends": 0,
+                    "maxStretch": 1,
+                    "routesOverSuggestedStretch": 0,
+                    "minSegmentPx": 254,
+                    "minInteriorSegmentPx": null,
+                    "shortSegmentCount": 0,
+                    "shortEndpointSegmentCount": 0,
+                    "shortInteriorSegmentCount": 0,
+                    "microSegmentCount": 0
+                  },
+                  "suggestedLimits": {
+                    "bendsPerRelationship": 2,
+                    "stretch": 1.35,
+                    "segmentPx": 16,
+                    "microSegmentPx": 8
+                  },
+                  "routeReview": {
+                    "crossings": [],
+                    "detours": []
+                  },
+                  "leadingSpace": {
+                    "measured": false,
+                    "reviewSuggested": false
+                  },
+                  "sequenceColumnSpace": {
+                    "measured": true,
+                    "columnFit": "spread",
+                    "participantCount": 2,
+                    "occupiedRight": 520,
+                    "viewBoxLeft": 0,
+                    "canvasWidth": 560,
+                    "emptyRightPx": 40,
+                    "emptyRightRatio": 0.071,
+                    "typicalParticipantWidth": 190,
+                    "reviewSuggested": false
+                  },
+                  "desktopReadability": {
+                    "budgetBasis": "legacy-930",
+                    "readerContract": "declared-wide-v1",
+                    "availableDiagramWidth": 930,
+                    "actualBudgetPx": 930,
+                    "limit": "legacy",
+                    "requestedTargetPx": null,
+                    "requestedTargetMet": null,
+                    "hardFloorPx": 6,
+                    "hardFloorMet": true,
+                    "minimumOwner": {
+                      "kind": "edge",
+                      "id": "nrc-to-nrs-1",
+                      "from": "nrc",
+                      "to": "nrs"
+                    },
+                    "minimumSourceTextPx": 11,
+                    "minimumProjectedTextPx": 11,
+                    "semanticTextCount": 8
+                  },
+                  "issues": []
+                }
+              }
+            }
+          ]
+        },
+        "diagnostics": [],
+        "provenance": "current",
+        "deliveryReceiptId": "81789a8e-3769-4bbc-9015-cb9eb2567c3c"
+      }
+    }
+  },
+  "browserCheck": {
+    "requested": false,
+    "ran": false
+  },
+  "diagnostics": [],
+  "evidence": {
+    "receipt": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.finalize.json",
+    "summaryReceipt": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.finalize-summary.json"
+  },
+  "visualReview": "not-requested",
+  "finishedAt": "2026-10-22T09:13:12.144Z",
+  "durationMs": 3380,
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-20T03:15:06.258Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  }
+}

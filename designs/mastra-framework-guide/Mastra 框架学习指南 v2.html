@@ -1,0 +1,2082 @@
+<!DOCTYPE html>
+<html lang="zh-Hans" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mastra 框架学习指南</title>
+  <link rel="icon" href="favicon.ico">
+  <style>
+    @font-face {
+      font-family: "Inter";
+      src: url("fonts/InterVF.woff2") format("woff2");
+      font-weight: 400 900;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: "Geist Mono";
+      src: url("fonts/GeistMonoVF.woff2") format("woff2");
+      font-weight: 400 800;
+      font-display: swap;
+    }
+
+    :root {
+      --bg: #fafafa;
+      --text: #141414;
+      --strong: #080808;
+      --muted: #494949;
+      --faint: #737272;
+      --accent: #0d8020;
+      --surface: #f2f2f2;
+      --border: #e2e2e2;
+      --code: #f2f2f2;
+      --nav: rgba(0, 0, 0, 0.045);
+      --nav-hot: rgba(0, 0, 0, 0.07);
+      --bar: rgba(250, 250, 250, 0.92);
+      --string: #158d29;
+      --keyword: #d81717;
+      --fn: #9829c7;
+      --sans: "Inter", "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", "Source Han Sans SC", sans-serif;
+      --mono: "Geist Mono", "Sarasa Mono SC", ui-monospace, monospace;
+      --bar-h: 48px;
+      --side: 272px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #050505;
+      --text: #e6e6e6;
+      --strong: #ffffff;
+      --muted: #9d9d9d;
+      --faint: #8a8a8a;
+      --accent: #3dff8a;
+      --surface: #171717;
+      --border: #2a2a2a;
+      --code: #141414;
+      --nav: rgba(255, 255, 255, 0.05);
+      --nav-hot: rgba(255, 255, 255, 0.09);
+      --bar: rgba(5, 5, 5, 0.9);
+      --string: #46f488;
+      --keyword: #fa7b6a;
+      --fn: #d06bee;
+      color-scheme: dark;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 16.5px;
+      line-height: 1.75;
+      text-wrap: pretty;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+
+    .progress {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 40;
+      height: 2px;
+      width: 0;
+      background: var(--accent);
+      pointer-events: none;
+    }
+
+    .top {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      height: var(--bar-h);
+      padding: 0 18px 0 14px;
+      background: var(--bar);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--strong);
+      font-weight: 620;
+      font-size: 15px;
+      letter-spacing: -0.02em;
+      text-decoration: none;
+    }
+    .mark { width: 22px; height: 14px; display: block; }
+    .top-title { color: var(--muted); font-size: 14px; }
+    .grow { flex: 1; }
+    .version {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--faint);
+    }
+    button {
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      height: 30px;
+      padding: 0 10px;
+      cursor: pointer;
+    }
+    button:hover { background: var(--nav); }
+    .nav-toggle { display: none; }
+
+    .shell {
+      display: grid;
+      grid-template-columns: var(--side) minmax(0, 1fr);
+      align-items: start;
+    }
+    .side {
+      position: sticky;
+      top: var(--bar-h);
+      height: calc(100vh - var(--bar-h));
+      overflow: auto;
+      padding: 18px 12px 40px 16px;
+      border-right: 1px solid var(--border);
+    }
+    .side a {
+      display: flex;
+      gap: 10px;
+      align-items: baseline;
+      margin: 1px 0;
+      padding: 6px 10px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+      text-decoration: none;
+    }
+    .side a span {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--accent);
+      min-width: 1.4em;
+    }
+    .side a.sub { padding-left: 32px; font-size: 13px; color: var(--faint); }
+    .side a:hover { background: var(--nav); color: var(--text); }
+    .side a.active {
+      background: var(--nav-hot);
+      color: var(--strong);
+      font-weight: 600;
+    }
+    .side-label {
+      margin: 16px 10px 4px;
+      color: var(--faint);
+      font-size: 11px;
+      font-weight: 650;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .scrim {
+      display: none;
+      position: fixed;
+      inset: var(--bar-h) 0 0 0;
+      background: rgba(0, 0, 0, 0.45);
+      z-index: 15;
+    }
+    body.nav-open .scrim { display: block; }
+
+    main {
+      min-width: 0;
+      max-width: 820px;
+      padding: 36px 48px 120px;
+    }
+    h1, h2, h3 {
+      color: var(--strong);
+      font-weight: 640;
+      letter-spacing: -0.03em;
+      line-height: 1.25;
+      text-wrap: balance;
+    }
+    h1 { margin: 0 0 12px; font-size: 40px; }
+    h2 {
+      margin: 56px 0 12px;
+      font-size: 28px;
+      scroll-margin-top: 72px;
+    }
+    h3 {
+      margin: 32px 0 8px;
+      font-size: 18px;
+      scroll-margin-top: 72px;
+    }
+    p { margin: 0.6em 0; }
+    a { color: inherit; text-underline-offset: 3px; }
+    main a:hover { color: var(--accent); }
+    .kicker {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 13px;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+    }
+    .lede {
+      margin: 0;
+      max-width: 40em;
+      font-size: 18px;
+      line-height: 1.65;
+      color: var(--text);
+    }
+    .meta { color: var(--muted); font-size: 14px; line-height: 1.65; }
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 18px;
+      margin: 28px 0 8px;
+      padding: 0;
+      list-style: none;
+    }
+    .facts li {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+      padding-top: 12px;
+      border-top: 1px solid var(--border);
+    }
+    .facts span { color: var(--muted); font-size: 12px; }
+    .facts b {
+      font-weight: 600;
+      font-size: 14px;
+      letter-spacing: -0.01em;
+      overflow-wrap: anywhere;
+    }
+    ol, ul { margin: 0.4em 0 0.9em; padding-left: 1.25em; }
+    li { margin: 0.28em 0; }
+    li::marker { color: var(--faint); }
+
+    table {
+      width: 100%;
+      margin: 12px 0 20px;
+      border-collapse: collapse;
+      font-size: 14.5px;
+      line-height: 1.55;
+    }
+    th, td {
+      padding: 10px 14px 10px 0;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: 0.04em;
+    }
+    tr.hidden { display: none; }
+    code, .mono { font-family: var(--mono); font-size: 0.88em; }
+    p code, li code {
+      padding: 1px 5px;
+      border-radius: 5px;
+      background: var(--surface);
+    }
+    td code, th code {
+      padding: 0;
+      background: none;
+      overflow-wrap: anywhere;
+    }
+    figure { margin: 14px 0 20px; }
+    figcaption {
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    pre {
+      margin: 0;
+      padding: 14px 16px;
+      overflow: auto;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--code);
+      color: var(--strong);
+      font-family: var(--mono);
+      font-size: 13px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .note {
+      margin: 14px 0 18px;
+      padding: 12px 14px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--surface);
+    }
+    .note p { margin: 0.25em 0; }
+    .src { margin-top: 4px; color: var(--faint); font-size: 13px; }
+    .fields, .packs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 10px 0 16px;
+      padding: 0;
+      list-style: none;
+    }
+    .fields li, .packs li {
+      margin: 0;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: var(--surface);
+      color: var(--text);
+      font-family: var(--mono);
+      font-size: 12.5px;
+      line-height: 1.45;
+    }
+    .filter {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0 4px;
+    }
+    .filter input {
+      width: min(320px, 100%);
+      height: 34px;
+      padding: 0 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg);
+      color: var(--text);
+      font: inherit;
+      font-size: 14px;
+    }
+    .filter input:focus {
+      outline: 2px solid color-mix(in srgb, var(--accent) 55%, transparent);
+      outline-offset: 1px;
+    }
+    .count { color: var(--faint); font-size: 13px; }
+
+    @media (max-width: 960px) {
+      .nav-toggle { display: inline-flex; align-items: center; }
+      .top-title { display: none; }
+      .shell { grid-template-columns: 1fr; }
+      .side {
+        position: fixed;
+        z-index: 18;
+        top: var(--bar-h);
+        left: 0;
+        width: min(320px, 88vw);
+        height: calc(100vh - var(--bar-h));
+        background: var(--bg);
+        transform: translateX(-105%);
+        transition: transform 160ms ease;
+      }
+      body.nav-open .side { transform: none; }
+      main { padding: 28px 20px 80px; }
+      h1 { font-size: 32px; }
+      .facts { grid-template-columns: 1fr; gap: 0; }
+    }
+  </style>
+  <script>
+    (function () {
+      var saved = localStorage.getItem("mastra-guide-theme");
+      var theme = saved || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      document.documentElement.setAttribute("data-theme", theme);
+    })();
+  </script>
+</head>
+<body>
+  <div class="progress" id="progress"></div>
+  <header class="top">
+    <button class="nav-toggle" id="nav-toggle" type="button" aria-expanded="false" aria-controls="guide-nav">目录</button>
+    <a class="brand" href="#top">
+      <svg class="mark" viewBox="116 116 430 267" aria-hidden="true">
+        <path fill="currentColor" d="M174.36 266.33c32.23 0 58.36 25.9 58.36 57.83 0 31.94-26.13 57.83-58.36 57.83S116 356.1 116 324.16s26.13-57.83 58.36-57.83"/>
+        <path fill="currentColor" d="M250.76 116c32.23 0 58.36 25.9 58.36 57.83q0 4.09-.56 8.01c-2.94 20.97-7.26 44.62 4.65 62.19l13.72 20.22 3.39 4.13c.62.75 1.8.71 2.36-.09l2.87-4.04 12.54-18.5c12.52-18.45 7.98-43.38 5.83-65.51a58 58 0 0 1-.27-5.6c0-31.94 26.13-57.83 58.36-57.83s58.36 25.89 58.36 57.83q0 4.66-.72 9.12c-3.18 19.84-7.73 41.77 2.4 59.16l5.8 9.28c5.48 8.79 15.3 13.57 25.26 16.46 24.22 7.04 41.9 29.22 41.91 55.5 0 31.94-26.13 57.83-58.36 57.83s-58.36-25.89-58.36-57.83q0-5.15.88-10.05c3.46-19.56 8.04-41.24-1.98-58.43l-12.72-21.84-.77-1.04a1.42 1.42 0 0 0-2.24-.06l-13.6 20.05c-12.2 17.98-7.6 42.26-4.75 63.73q.5 3.75.5 7.64c0 31.94-26.13 57.83-58.36 57.83s-58.36-25.89-58.36-57.83c0-22.69 3.54-48.01-9.23-66.85l-1-1.49c-10.27-15.12-28.48-22.63-44.5-31.57a57.7 57.7 0 0 1-29.77-50.42c0-31.94 26.13-57.83 58.36-57.83"/>
+      </svg>
+      <span>Mastra</span>
+    </a>
+    <span class="top-title">框架学习指南</span>
+    <span class="grow"></span>
+    <span class="version">core 1.85.0</span>
+    <button id="theme" type="button">深色</button>
+  </header>
+  <div class="scrim" id="scrim"></div>
+  <div class="shell">
+    <nav class="side" id="guide-nav">
+      <a href="#map"><span>01</span>仓库地图</a>
+      <a href="#path"><span>02</span>学习路径</a>
+      <a href="#model"><span>03</span>心智模型</a>
+      <a href="#server"><span>04</span>服务端开发</a>
+      <a class="sub" href="#create">创建项目</a>
+      <a class="sub" href="#config">配置入口</a>
+      <a class="sub" href="#agent">Agent</a>
+      <a class="sub" href="#tool">Tool</a>
+      <a class="sub" href="#workflow">Workflow</a>
+      <a class="sub" href="#http">Server</a>
+      <a class="sub" href="#deploy">部署</a>
+      <a href="#client"><span>05</span>前端对接</a>
+      <a class="sub" href="#clientjs">client-js</a>
+      <a class="sub" href="#react">React</a>
+      <a class="sub" href="#aisdk">AI SDK</a>
+      <a class="sub" href="#studio">Studio</a>
+      <a href="#features"><span>06</span>功能清单</a>
+      <a href="#minimal"><span>07</span>最小用法</a>
+      <a href="#bounds"><span>08</span>版本与边界</a>
+      <a href="#diffs"><span>09</span>文档差异</a>
+      <a href="#extra"><span>10</span>补充问题</a>
+      <a class="sub" href="#vue">Vue</a>
+      <a class="sub" href="#multi">多 Agent</a>
+      <a class="sub" href="#intent">意图识别</a>
+      <a class="sub" href="#decision">决策模型</a>
+      <a class="sub" href="#local-app">本地工作台</a>
+      <a class="sub" href="#zcode">类似 Zcode</a>
+      <a class="sub" href="#cli">CLI</a>
+      <a class="sub" href="#approval">审批</a>
+      <a class="sub" href="#builtin-tools">默认工具</a>
+      <a class="sub" href="#suspend">Suspend and resume</a>
+      <a class="sub" href="#wf-hitl">Workflow 人审</a>
+      <a class="sub" href="#agent-hitl">Agent 人审</a>
+      <a class="sub" href="#versions">版本差异</a>
+      <a class="sub" href="#mcp">接 MCP</a>
+      <a class="sub" href="#mcp-server">暴露 MCP</a>
+      <a class="sub" href="#mcp-events">事件和 Apps</a>
+      <a class="sub" href="#mcp-revs">协议修订史</a>
+      <a class="sub" href="#mcp-diff">新旧协议</a>
+      <a class="sub" href="#mcp-old">旧协议伪代码</a>
+      <a class="sub" href="#mcp-new">新协议伪代码</a>
+      <a class="sub" href="#mcp-impl">Mastra 1.x / 2.x</a>
+      <a class="sub" href="#java">接 Java</a>
+      <a class="sub" href="#endpoints">端点与屏蔽</a>
+      <a class="sub" href="#authz">按用户放行</a>
+      <a class="sub" href="#exec-sec">执行环境安全</a>
+      <a class="sub" href="#hitl-ext">审批接外部平台</a>
+      <a class="sub" href="#memory-store">会话与存储</a>
+      <a class="sub" href="#reconnect">重连与续跑</a>
+      <a class="sub" href="#upgrade">更新与共存</a>
+      <a class="sub" href="#obs">可观测性</a>
+      <a class="sub" href="#nginx">nginx</a>
+      <a class="sub" href="#diagrams">架构图索引</a>
+      <a href="#update"><span>11</span>更新梳理</a>
+      <a class="sub" href="#update-versions">版本对照</a>
+      <a class="sub" href="#update-knowledge">Knowledge</a>
+      <a class="sub" href="#update-streams">Resumable streams</a>
+      <a class="sub" href="#update-workflow">Workflow state</a>
+      <a class="sub" href="#update-approval">审批修复</a>
+      <a class="sub" href="#update-mcp">MCP 2.6–2.10</a>
+      <a class="sub" href="#update-client">client-js 重试</a>
+      <a class="sub" href="#update-memory">memory 修复</a>
+      <a class="sub" href="#update-misc">CLI 与新包</a>
+    </nav>
+
+    <main id="top">
+      <p class="kicker">学习指南</p>
+      <h1>Mastra 框架学习指南</h1>
+      <p class="lede">Mastra 是 TypeScript 框架。它用来做 AI agent 和 AI 应用。你在服务端注册 Agent、Tool、Workflow，再用 HTTP、React 或现有 Web 框架接到前端。它也能作为独立 server 部署。</p>
+      <ul class="facts">
+        <li><span>核心包</span><b>@mastra/core 1.85.0</b></li>
+        <li><span>许可</span><b>Apache-2.0，ee/ 另计</b></li>
+        <li><span>本地 Studio</span><b>localhost:4111</b></li>
+      </ul>
+      <p class="meta">抽查对象是当前仓库工作副本。包版本会变。第 1–10 节逐句出处是 <code>explorations/mastra-framework-learning-guide.md</code>，只转写对上源码或文档的内容。第 11 节是 2026-11-19 按 upstream <code>10b2d3fc6d</code> 直接对照各包 CHANGELOG 和文档新增的梳理。</p>
+
+      <h2 id="map">01 仓库地图</h2>
+      <p>每个目录只说它在框架里的位置。包名来自该目录的 package.json。</p>
+      <table>
+        <thead><tr><th>目录</th><th>包名</th><th>做什么</th></tr></thead>
+        <tbody>
+          <tr><td><code>packages/core</code></td><td><code>@mastra/core</code></td><td>框架本体。导出 Mastra、Agent、Workflow、Tool、Memory 类型、Server 配置。</td></tr>
+          <tr><td><code>packages/server</code></td><td><code>@mastra/server</code></td><td>与框架无关的 HTTP route、handler、schema。开发 server 和 adapter 都用它。</td></tr>
+          <tr><td><code>server-adapters/</code></td><td><code>@mastra/hono</code>、<code>@mastra/express</code>、<code>@mastra/fastify</code>、<code>@mastra/koa</code>、<code>@mastra/elysia</code>、<code>@mastra/nestjs</code>、<code>@mastra/next</code>、<code>@mastra/tanstack-start</code></td><td>把 Mastra endpoint 挂到已有 HTTP 框架。</td></tr>
+          <tr><td><code>client-sdks/client-js</code></td><td><code>@mastra/client-js</code></td><td>浏览器或服务端调用正在跑的 Mastra server。</td></tr>
+          <tr><td><code>client-sdks/react</code></td><td><code>@mastra/react</code></td><td>React context、hooks、消息工具、语音 helper、UI 组件。</td></tr>
+          <tr><td><code>client-sdks/ai-sdk</code></td><td><code>@mastra/ai-sdk</code></td><td>给 Vercel AI SDK UI 用的 route 和 stream 转换。</td></tr>
+          <tr><td><code>packages/playground</code></td><td><code>@internal/playground</code></td><td>Studio 的应用代码。包是 private。</td></tr>
+          <tr><td><code>packages/playground-ui</code></td><td><code>@mastra/playground-ui</code></td><td>Studio / Playground 组件。</td></tr>
+          <tr><td><code>packages/cli</code></td><td><code>mastra</code></td><td>CLI。bin 名是 mastra。</td></tr>
+          <tr><td><code>packages/create-mastra</code></td><td><code>create-mastra</code></td><td>一次性项目生成器。</td></tr>
+          <tr><td><code>stores/</code></td><td><code>@mastra/libsql</code>、<code>@mastra/pg</code>、<code>@mastra/mongodb</code> 等</td><td>Storage 和 vector 适配器。不是每个包都实现全部 domain。</td></tr>
+          <tr><td><code>packages/memory</code></td><td><code>@mastra/memory</code></td><td>对话历史、semantic recall、working memory、observational memory。</td></tr>
+          <tr><td><code>packages/rag</code></td><td><code>@mastra/rag</code></td><td>文档切块、rerank、graph retrieval。</td></tr>
+          <tr><td><code>packages/mcp</code></td><td><code>@mastra/mcp</code></td><td>MCP client 和 MCP server。</td></tr>
+          <tr><td><code>packages/evals</code></td><td><code>@mastra/evals</code></td><td>预置 scorer。</td></tr>
+          <tr><td><code>observability/</code></td><td><code>@mastra/observability</code>，另有 <code>@mastra/langfuse</code> 等</td><td>trace、log、metric、feedback，以及各观测后端。</td></tr>
+          <tr><td><code>packages/deployer</code> 与 <code>deployers/</code></td><td><code>@mastra/deployer</code>；Vercel、Netlify、Cloudflare、cloud、sandbox</td><td>构建、打包、部署。</td></tr>
+          <tr><td><code>voice/</code></td><td><code>@mastra/voice-openai</code> 等</td><td>TTS、STT、部分 realtime STS。</td></tr>
+          <tr><td><code>packages/auth</code> 与 <code>auth/</code></td><td><code>@mastra/auth</code>；Clerk、WorkOS 等</td><td>JWT 和各身份厂商。</td></tr>
+          <tr><td><code>channels/</code></td><td><code>@mastra/slack</code>、<code>@mastra/discord</code>、<code>@mastra/teams</code>、<code>@mastra/telegram</code></td><td>消息平台包。文档里的 channel adapter 也可以来自 Chat SDK。</td></tr>
+          <tr><td><code>pubsub/</code></td><td>Redis、Google Cloud Pub/Sub、Valkey</td><td>分布式事件总线。</td></tr>
+          <tr><td><code>workflows/</code></td><td><code>@mastra/inngest</code>、<code>@mastra/temporal</code></td><td>外部 workflow runner。</td></tr>
+          <tr><td><code>browser/</code></td><td><code>@mastra/agent-browser</code>、<code>@mastra/stagehand</code>、<code>@mastra/browser-firecrawl</code>、<code>@mastra/browser-viewer</code></td><td>浏览器自动化。</td></tr>
+          <tr><td><code>workspaces/</code></td><td><code>@mastra/e2b</code>、<code>@mastra/docker</code>、<code>@mastra/vercel</code> 等</td><td>sandbox 和 filesystem 提供方。</td></tr>
+          <tr><td><code>agent-sdks/</code></td><td><code>@mastra/acp</code>、<code>@mastra/claude</code>、<code>@mastra/cursor</code>、<code>@mastra/openai</code></td><td>ACP 和厂商 SDK agent。</td></tr>
+          <tr><td><code>signals/</code></td><td><code>@mastra/github-signals</code>、<code>@mastra/ring-signals</code></td><td>GitHub 与 Ring 门铃摄像头的 signal provider。</td></tr>
+          <tr><td><code>integrations/</code></td><td><code>@mastra/json-render</code></td><td>让 agent 组合 json-render 界面，流式发给前端并留在 memory。0.1.0，新目录。</td></tr>
+          <tr><td><code>packages/platform</code></td><td><code>@mastra/platform</code></td><td>Mastra Platform 托管的 Memory、Knowledge、Browser、workspace 客户端。0.1.1，新增。</td></tr>
+          <tr><td><code>code-mode/</code></td><td><code>@mastra/isolated-vm</code>、<code>@mastra/quickjs</code></td><td>Code mode 的隔离运行时。</td></tr>
+          <tr><td><code>packages/connect</code></td><td><code>@mastra/connect</code></td><td>使用 Mastra platform 上已连接账号的 tool。包 license 是 Apache-2.0。生成的 provider schema 另有 Elastic License 2.0 声明。</td></tr>
+          <tr><td><code>packages/editor</code></td><td><code>@mastra/editor</code></td><td>Studio 里编辑并保存 agent 等配置。<code>src/ee/</code> 是企业许可。</td></tr>
+          <tr><td><code>packages/loggers</code></td><td><code>@mastra/loggers</code></td><td>Pino logger 和 file、HTTP、Upstash transport。</td></tr>
+          <tr><td><code>embedders/voyageai</code></td><td><code>@mastra/voyageai</code></td><td>Voyage embedding。</td></tr>
+          <tr><td><code>packages/fastembed</code></td><td><code>@mastra/fastembed</code></td><td>本地 embedding。semantic recall 文档的 packages 列表包含它。</td></tr>
+          <tr><td><code>docs/</code></td><td>文档站点，不是运行时包</td><td><code>/docs</code>、<code>/reference</code>、<code>/integrations</code>、<code>/models</code>。</td></tr>
+          <tr><td><code>ee/</code></td><td>无包名</td><td>企业许可文本，见 <code>ee/LICENSE</code>。</td></tr>
+          <tr><td><code>mastracode/</code></td><td>本次未逐包展开</td><td>仓库里的软件工厂产品。它不是学习框架 API 的入口。</td></tr>
+        </tbody>
+      </table>
+      <p class="src">examples/ 和 templates/ 没有通读。</p>
+
+      <h2 id="path">02 学习路径</h2>
+      <p>官方课在 <code>docs/src/learn/course.ts</code>。课名是 Build Your First AI Agent in TypeScript。<code>courseId</code> 是 <code>mastra-101</code>。每课正文在 <code>docs/src/learn/content/&lt;slug&gt;.mdx</code>。</p>
+      <ol>
+        <li>先看框架是什么：<code>docs/src/content/en/docs/index.mdx</code>。再看课 <code>what-is-an-agent</code>。</li>
+        <li>创建项目并打开 Studio：课 <code>run-your-first-agent</code>。命令是 <code>npm create mastra@latest</code>。本地开发见 <code>develop.mdx</code>。</li>
+        <li>看目录：课 <code>project-structure</code>。对照 develop 页的 Project structure。</li>
+        <li>写 Agent：课 <code>create-an-agent</code>。对照 <code>docs/src/content/en/docs/agents/overview.mdx</code>。</li>
+        <li>写 Tool：课 <code>create-a-tool</code>、<code>fetch-live-data</code>。对照 <code>agents/tools.mdx</code>。</li>
+        <li>让编码助手读文档：课 <code>build-with-ai</code>。对照 develop 页的 Mastra skills。</li>
+        <li>接 MCP：课 <code>connect-to-mcp</code>。对照 <code>connections/mcp.mdx</code>。</li>
+        <li>写 Workflow：课 <code>build-a-workflow</code>、<code>agents-vs-workflows</code>、<code>agents-in-workflows</code>。对照 workflows 的 overview 和 control-flow。</li>
+        <li>加 Memory：课 <code>how-memory-works</code>、<code>observational-memory</code>。对照 memory overview。</li>
+        <li>加 guardrail：课 <code>guardrails-with-processors</code>。对照 <code>agents/processors.mdx</code>。</li>
+        <li>部署：课 <code>deploy-to-mastra-platform</code>。对照 deployment overview 和 mastra-platform overview。</li>
+        <li>接到 Slack：课 <code>chat-with-agent-in-slack</code>。对照 <code>channels.mdx</code>。</li>
+      </ol>
+      <p>文档侧边栏的产品顺序在 <code>docs/src/content/en/docs/sidebars.js</code>。2026-11 起按三段分组：<b>Build</b>（Agents、Workflows、Harness、Memory、Knowledge）、<b>Extend</b>（Subagents、Skills、Channels、Signals、Sandboxes、Browser、Classifier、Connections）、<b>Develop / Deploy</b>（Storage、Server、Studio、Deployment、Auth、Knowledge、Observability、Editor）。Agents 下新增 Resumable Streams 页，Server 下新增 Built-in MCP Server 页，Classifier 从 reference 挪进产品文档。</p>
+      <p>参考 API 不要从第一页读到最后。先读这些索引：</p>
+      <ul>
+        <li><code>docs/src/content/en/reference/core/mastra-class.mdx</code></li>
+        <li><code>docs/src/content/en/reference/agents/agent.mdx</code></li>
+        <li><code>docs/src/content/en/reference/workflows/workflow.mdx</code></li>
+        <li><code>docs/src/content/en/reference/client-js/mastra-client.mdx</code></li>
+        <li><code>docs/src/content/en/reference/server/routes.mdx</code></li>
+        <li><code>docs/src/content/en/reference/configuration.mdx</code></li>
+      </ul>
+
+      <h2 id="model">03 心智模型</h2>
+      <p>这些对象都挂到一个 <code>Mastra</code> 实例上。<code>Mastra</code> 是注册表和协调器。类在 <code>packages/core/src/mastra/index.ts</code>。</p>
+      <table>
+        <thead><tr><th>概念</th><th>解决什么</th><th>怎么接</th></tr></thead>
+        <tbody>
+          <tr><td>Agent</td><td>目标不固定。模型自己决定调哪些 tool、循环几次、何时停。</td><td><code>new Agent({...})</code>，放进 <code>new Mastra({ agents })</code>。</td></tr>
+          <tr><td>Tool</td><td>模型可调用的函数。用 schema 描述输入输出。</td><td>挂到 Agent 的 <code>tools</code>，或单独注册到 <code>Mastra.tools</code>。</td></tr>
+          <tr><td>Workflow</td><td>步骤和顺序事先写好。默认用内置引擎。</td><td><code>createWorkflow</code> 后 <code>.then()</code> / <code>.branch()</code> / <code>.parallel()</code>，再 <code>.commit()</code>。</td></tr>
+          <tr><td>Memory</td><td>让后续请求看到以前的消息和抽取后的事实。</td><td><code>@mastra/memory</code> 的 <code>Memory</code> 挂到 Agent。调用时传 <code>thread</code> 和 <code>resource</code>。</td></tr>
+          <tr><td>Storage</td><td>进程退出后仍保存 memory、workflow snapshot、trace、score、schedule 等。</td><td><code>new Mastra({ storage })</code>。类型是 <code>MastraCompositeStore</code>。</td></tr>
+          <tr><td>RequestContext</td><td>单次请求的值。例如用户等级、locale。它不是跨请求的记忆。</td><td><code>new RequestContext()</code>，传给 generate、stream、workflow 或 tool。Tool 的 <code>execute</code> 第二个参数里总有 <code>requestContext</code>。</td></tr>
+          <tr><td>Processor</td><td>在模型调用前改输入，或在返回用户前改输出。也可以处理 API 错误。</td><td>挂到 Agent 的 <code>inputProcessors</code>、<code>outputProcessors</code>、<code>errorProcessors</code>。接口 <code>Processor</code> 至少有 <code>id</code>。</td></tr>
+          <tr><td>Scorer / Eval</td><td>给不确定的模型输出打数字分。</td><td><code>createScorer</code> 在 <code>@mastra/core/evals</code>。预置 scorer 在 <code>@mastra/evals</code>。</td></tr>
+          <tr><td>Observability</td><td>记录 agent run、workflow step、tool call、model 调用的 span，并带出 log、metric、feedback。</td><td><code>new Mastra({ observability })</code>。实现来自 <code>@mastra/observability</code>。</td></tr>
+        </tbody>
+      </table>
+      <h3>一条请求怎么走</h3>
+      <ol>
+        <li>HTTP 进入 server。middleware 可以写入 RequestContext。</li>
+        <li>Server 找到已注册的 Agent 或 Workflow。</li>
+        <li>Agent 先跑 inputProcessors，再按 instructions 和 model 调用模型。</li>
+        <li>模型要外部数据时调用 Tool。inputSchema 先校验。execute 再做运行时检查。</li>
+        <li>若 Agent 配了 Memory，这次调用要带 thread 和 resource。消息写入 Storage。</li>
+        <li>outputProcessors 处理模型结果。</li>
+        <li>若配了 observability，这次 run 成为一条 trace。</li>
+        <li>若步骤必须固定，用 Workflow。<code>suspend()</code> 把 snapshot 写入 Storage，之后 <code>resume()</code>。</li>
+      </ol>
+      <p>Agent 和 Workflow 可以互相调用。Agent 的 <code>workflows</code> 字段能挂 workflow。Workflow 可以用 <code>createStep</code> 包住 agent 或 tool。源码导出 <code>createStepFromAgent</code>、<code>createStepFromTool</code>。文档入口是 <code>docs/src/content/en/docs/workflows/agents-and-tools.mdx</code>。</p>
+
+      <h2 id="server">04 服务端开发</h2>
+      <h3 id="create">创建项目</h3>
+      <figure>
+        <figcaption>README 与 docs index 的 Quickstart。同一页还有 pnpm、yarn、bun 写法。</figcaption>
+        <pre>npm create mastra@latest</pre>
+      </figure>
+      <p><code>create-mastra</code> 要求 Node.js 22.13.0 或更新。README 里的非交互形式，provider 选项是 openai、anthropic、google、xai：</p>
+      <figure>
+        <figcaption>非交互创建</figcaption>
+        <pre>npm create mastra@latest &lt;project-name&gt; -- --llm &lt;provider&gt;</pre>
+      </figure>
+      <ol>
+        <li>进入项目目录。</li>
+        <li>运行 <code>npm run dev</code> 或 <code>npx mastra dev</code>。</li>
+        <li>打开 <code>http://localhost:4111</code>。API 列表在 <code>http://localhost:4111/api</code>。</li>
+        <li><code>src/mastra/</code> 变更会自动重启开发 server。</li>
+      </ol>
+      <p>也可以不生成项目，手动安装。文档给 AI 的最短步骤是：<code>package.json</code> 设 <code>"type": "module"</code>，安装 <code>@mastra/core@latest</code>、<code>zod@latest</code>、<code>typescript@latest</code>、<code>@types/node@latest</code>、<code>mastra@latest</code>。</p>
+      <figure>
+        <figcaption>develop.mdx，Project structure。注册入口是 src/mastra/index.ts</figcaption>
+        <pre>src/mastra/agents/
+src/mastra/tools/
+src/mastra/workflows/
+src/mastra/scorers/
+src/mastra/skills.ts
+src/mastra/index.ts</pre>
+      </figure>
+      <div class="note">
+        <p>文件式 Agent 只在 <code>mastra dev</code> 或 <code>mastra build</code> 时发现。应用直接 import Mastra 实例时，不会自动发现这些文件。这时要在代码里注册。</p>
+      </div>
+
+      <h3 id="config">Mastra 配置入口</h3>
+      <p>类是 <code>Mastra</code>。类型是 <code>Config</code>。位置是 <code>packages/core/src/mastra/index.ts</code>。文档示例从 <code>@mastra/core</code> 导入。类注释示例从 <code>@mastra/core/mastra</code> 导入。<code>packages/core/src/index.ts</code> 重新导出了 <code>Mastra</code>，所以两条路径在源码上都有导出。</p>
+      <p>本次读到的 Config 字段：</p>
+      <ul class="fields">
+        <li>agents</li><li>storage</li><li>vectors</li><li>logger</li><li>loggerOptions</li><li>workflows</li><li>agentControllers</li><li>harnesses</li><li>tts</li><li>observability</li><li>idGenerator</li><li>deployer</li><li>server</li><li>studio</li><li>mcpServers</li><li>bundler</li><li>pubsub</li><li>cache</li><li>scorers</li><li>classifiers</li><li>tools</li><li>processors</li><li>memory</li><li>knowledge</li><li>workspace</li><li>gateways</li><li>events</li><li>editor</li><li>versions</li><li>backgroundTasks</li><li>scheduler</li><li>notifications</li><li>schedules</li><li>channels</li><li>environment</li><li>transform</li><li>workers</li><li>recovery</li>
+      </ul>
+      <p><code>__ephemeral</code> 注释写明不是公开 API。<code>harnesses</code> 已废弃，请用 <code>agentControllers</code>。两边都有时，<code>agentControllers</code> 优先。<code>logger</code> 可以是 logger，或 <code>false</code>。<code>workers</code> 可以是 worker 数组，或 <code>false</code>。</p>
+      <p><code>recovery</code> 的类型是 <code>MastraRecoveryConfig</code>：<code>workflows</code>（<code>'auto' | 'off'</code>）、<code>workflowConcurrency</code>、<code>durableAgents</code>（<code>'auto' | 'off'</code>）。注释默认是 <code>{ workflows: 'auto', workflowConcurrency: 5, durableAgents: 'off' }</code>。</p>
+      <p><code>server</code> 的类型是 <code>ServerConfig</code>，在 <code>packages/core/src/server/types.ts</code>。本次读到的字段：</p>
+      <ul class="fields">
+        <li>port</li><li>host</li><li>studioHost</li><li>studioProtocol</li><li>studioPort</li><li>studioBase</li><li>apiPrefix</li><li>timeout</li><li>drainTimeout</li><li>handleShutdownSignals</li><li>apiRoutes</li><li>middleware</li><li>cors</li><li>build</li><li>bodySizeLimit</li><li>mcpOptions</li><li>a2a</li><li>auth</li><li>rbac</li>
+      </ul>
+      <p>注释默认：<code>port</code> 4111，<code>host</code> <code>'localhost'</code>，<code>apiPrefix</code> <code>'/api'</code>，<code>studioBase</code> <code>'/'</code>。文档示例写 port 也可来自 <code>PORT</code>，host 也可来自 <code>MASTRA_HOST</code>。源码注释只写了数字和 <code>'localhost'</code> 默认。</p>
+      <p><code>build</code> 里有 <code>swaggerUI</code>、<code>apiReqLogs</code>、<code>openAPIDocs</code>。生产环境默认关掉 OpenAPI 和 Swagger。要打开就设这两个字段为 <code>true</code>。</p>
+      <p>实例上本次确认的方法包括：<code>getAgent</code>、<code>getAgentById</code>、<code>listAgents</code>、<code>getStorage</code>、<code>getLogger</code>、<code>getServer</code>、<code>listWorkflows</code>、<code>listTools</code>、<code>listScorers</code>、<code>listMCPServers</code>、<code>getDeployer</code>。<code>getAgent</code> 按注册表的 key。<code>getAgentById</code> 按 agent 的 <code>id</code>。文档推荐用 <code>getAgentById</code>，这样拿到的是接好共享 storage、logger、注册表的实例。</p>
+
+      <h3 id="agent">Agent</h3>
+      <p>类型 <code>AgentConfig</code> 在 <code>packages/core/src/agent/types.ts</code>。类 <code>Agent</code> 在 <code>packages/core/src/agent/agent.ts</code>。导入路径文档用的是 <code>@mastra/core/agent</code>。</p>
+      <p>必填：<code>id</code>、<code>name</code>、<code>instructions</code>、<code>model</code>。当 <code>editor</code> 把 instructions 交给 Studio 时，代码里不能再写 <code>instructions</code>。</p>
+      <ul>
+        <li><code>instructions</code>：字符串、消息，或按 requestContext 动态返回。</li>
+        <li><code>model</code>：<code>provider/model</code> 字符串、配置对象、fallback 数组，或函数。</li>
+        <li><code>tools</code>：静态或动态。</li>
+        <li><code>memory</code>：<code>DynamicArgument&lt;MastraMemory&gt;</code>。</li>
+        <li><code>inputProcessors</code>、<code>outputProcessors</code>、<code>errorProcessors</code>、<code>maxProcessorRetries</code>、<code>errorProcessorDefaults</code>。</li>
+        <li>另外还有 <code>agents</code>（subagent）、<code>workflows</code>、<code>scorers</code>、<code>skills</code>、<code>voice</code>、<code>channels</code>、<code>browser</code>、<code>workspace</code>、<code>hooks</code>、<code>durable</code>、<code>signals</code>、<code>goal</code>、<code>requestContextSchema</code>。</li>
+      </ul>
+      <p>调用：<code>.generate()</code> 返回完整结果。<code>.stream()</code> 按 token 流式返回。</p>
+
+      <h3 id="tool">Tool</h3>
+      <p>工厂是 <code>createTool</code>，从 <code>@mastra/core/tools</code> 导入。<code>ToolAction</code> 把约束和执行分开：</p>
+      <ul>
+        <li>形状放 schema：<code>inputSchema</code>、<code>outputSchema</code>、<code>suspendSchema</code>、<code>resumeSchema</code>、<code>requestContextSchema</code>。</li>
+        <li>动作放 <code>execute</code>。签名是 <code>(inputData, context) =&gt; Promise&lt;...&gt;</code>。第一个参数是已经按 inputSchema 校验的输入。第二个参数里的 <code>requestContext</code> 总是有。</li>
+        <li>审批放 <code>requireApproval</code>。暂停前的检查可放 <code>beforeApproval</code>。</li>
+        <li><code>outputValidation</code>：<code>'strict'</code> 或 <code>'warn'</code>。</li>
+      </ul>
+      <p>这和仓库规则一致。规则在根目录 <code>AGENTS.md</code>：确定性的形状、类型、范围、格式、字段间约束放 schema，不要放进 <code>execute</code>。授权、是否存在、冲突、外部 API 结果留在 <code>execute</code>。规则是写法约定，不是类型系统强制。文档里的 <code>execute</code> 可以只写第一个参数。</p>
+
+      <h3 id="workflow">Workflow</h3>
+      <p>入口是 <code>createWorkflow</code>、<code>createStep</code>，从 <code>@mastra/core/workflows</code> 导入。</p>
+      <p><code>CreateWorkflowParams</code> 含：<code>id</code>、<code>inputSchema</code>、<code>outputSchema</code>，以及可选的 <code>stateSchema</code>、<code>requestContextSchema</code>、<code>retryConfig</code>、<code>options</code>、<code>schedule</code>、<code>steps</code>、<code>description</code>、<code>metadata</code>、<code>type</code>。</p>
+      <ul class="fields">
+        <li>.then(step)</li><li>.parallel(steps)</li><li>.branch(...)</li><li>.dowhile(...)</li><li>.dountil(...)</li><li>.foreach(...)</li><li>.map(...)</li><li>.sleep(...)</li><li>.sleepUntil(...)</li><li>.classifier(...)</li><li>.commit()</li>
+      </ul>
+      <ul>
+        <li>步骤和原则：<code>workflows/overview.mdx</code></li>
+        <li>顺序、并行、条件、循环：<code>workflows/control-flow.mdx</code></li>
+        <li>共享 state：<code>workflows/workflow-state.mdx</code>。step 用 <code>inputData</code>。共享值用 <code>state</code> 和 <code>setState</code>。类型字段是 <code>stateSchema</code>。</li>
+        <li>暂停：<code>workflows/suspend-and-resume.mdx</code>。<code>suspend()</code> 写 snapshot。过程见下方 <a href="#suspend">Suspend and resume</a>。</li>
+        <li>snapshot 内容：<code>workflows/snapshots.mdx</code></li>
+        <li>人审批：<code>workflows/human-in-the-loop.mdx</code>。可以 <code>resume</code>，也可以 <code>bail</code>。</li>
+      </ul>
+      <p><code>WorkflowRunStatus</code>：<code>running</code>、<code>success</code>、<code>failed</code>、<code>tripwire</code>、<code>suspended</code>、<code>waiting</code>、<code>pending</code>、<code>canceled</code>、<code>bailed</code>、<code>paused</code>、<code>skipped</code>。持久化状态类型是 <code>WorkflowState</code> 和 <code>WorkflowRunState</code>。</p>
+      <p><code>schedule</code> 会向 Mastra scheduler 注册 cron。只有设置了环境变量 <code>MASTRA_WORKERS</code> 时，这个 workflow 才改走 evented engine。</p>
+
+      <h3 id="http">Server</h3>
+      <p>内置 HTTP API 暴露已注册的 agent、workflow 和其他能力。路由分组见 <code>docs/src/content/en/reference/server/routes.mdx</code>：Agents、Workflows、Tools、Memory、Vectors、Datasets and experiments、MCP、Responses API、Conversations API、Logs、Telemetry。</p>
+      <p>另外有实验性的 OpenAI 兼容 Responses 和 Conversations 路由。用 <code>agent_id</code> 选择 Mastra agent。这不是把请求原样转给模型厂商。</p>
+      <ul>
+        <li>OpenAPI：<code>http://localhost:4111/api/openapi.json</code></li>
+        <li>Swagger：<code>http://localhost:4111/swagger-ui</code></li>
+      </ul>
+      <p>自定义路由：<code>registerApiRoute()</code>，从 <code>@mastra/core/server</code> 导入，放进 <code>server.apiRoutes</code>。带 Zod 校验用 <code>createRoute()</code>。</p>
+      <p>middleware 是 Hono 签名 <code>(c, next)</code>。只在 Hono 路径生效：<code>mastra dev</code>、<code>mastra build</code>、<code>@mastra/hono</code>，以及基于它的 <code>@mastra/next</code>、<code>@mastra/tanstack-start</code>。Express、Fastify、Koa 不能跑这种 handler。</p>
+      <p><code>server.auth</code> 处理身份。不配置时，API 和 Studio 都是公开的。<code>server.rbac</code> 注释写明是企业版授权。<code>StaticRBACProvider</code> 从 <code>@mastra/core/auth/ee</code> 导入。Studio 可以单独配 <code>studio.auth</code>。不配则回退到 <code>server.auth</code>。</p>
+      <p>Server adapter 实际存在：Elysia、Express、Fastify、Hono、Koa、NestJS、Next.js、TanStack Start。adapter 不跑文件式发现。要 Studio 只开 UI 时，文档写 <code>mastra studio</code>。</p>
+      <p>和 Web 框架一起部署的说明在 <code>docs/src/content/en/docs/deployment/web-framework.mdx</code>。首页集成格子点名 Next.js、Vite React、Astro、Express、SvelteKit、Hono。</p>
+
+      <h3 id="deploy">部署</h3>
+      <p>独立 server：<code>mastra build</code> 生成 <code>.mastra/output</code>。入口是 <code>index.mjs</code>。可跑在 Node.js、Bun、Deno。文档写的 Node 下限是 <code>v22.13.0</code>。贡献指南写的是 Node 22 上 <code>v22.19.0</code>，或 <code>v24.11.0</code>。差异见最后一节。</p>
+      <ul>
+        <li>Serverless / 云：<code>@mastra/deployer-vercel</code>、<code>@mastra/deployer-netlify</code>、<code>@mastra/deployer-cloudflare</code>。</li>
+        <li>平台：<code>@mastra/deployer-cloud</code>。命令文档写的是 <code>mastra deploy</code>。</li>
+        <li>Sandbox 部署：<code>@mastra/deployer-sandbox</code>。</li>
+        <li>Workflow runner 默认是内置引擎。Inngest 用 <code>@mastra/inngest</code>。Temporal 用 <code>@mastra/temporal</code>。同一页写明 Temporal 是 experimental，还不能用于生产。</li>
+        <li>Worker：API 进程和 workflow、cron、后台 tool 可以拆开。配置字段是 Mastra 的 <code>workers</code>。</li>
+      </ul>
+
+      <h2 id="client">05 前端对接</h2>
+      <h3 id="clientjs">@mastra/client-js</h3>
+      <figure>
+        <figcaption>apiPrefix 默认 /api，要和 server.apiPrefix 一致</figcaption>
+        <pre>import { MastraClient } from '@mastra/client-js'
+
+const client = new MastraClient({ baseUrl: 'http://localhost:4111' })
+const agent = client.getAgent('assistant')</pre>
+      </figure>
+      <p><code>ClientOptions</code> 字段：<code>baseUrl</code>、<code>apiPrefix</code>、<code>retries</code>、<code>backoffMs</code>、<code>maxBackoffMs</code>、<code>headers</code>、<code>abortSignal</code>、<code>credentials</code>、<code>fetch</code>。<code>RequestContext</code> 也可以从 <code>@mastra/client-js</code> 导入。</p>
+      <ul>
+        <li>Agent：<code>listAgents</code>、<code>listAgentsModelProviders</code>、<code>getAgent</code>、<code>getAgentController</code>、<code>listStoredAgents</code>、<code>getStoredAgent</code></li>
+        <li>Workflow：<code>listWorkflows</code>、<code>listWorkflowRunCounts</code>、<code>getWorkflow</code>、<code>listDynamicWorkflows</code>、<code>getDynamicWorkflow</code>、<code>getWorkflowBuilderSettings</code></li>
+        <li>Tool：<code>listTools</code>、<code>getTool</code></li>
+        <li>Memory：<code>getMemoryConfig</code>、<code>getMemoryThread</code>、<code>listThreadMessages</code>、<code>getMemoryStatus</code>、<code>getObservationalMemory</code>、<code>getWorkingMemory</code></li>
+        <li>Processor：<code>listProcessors</code>、<code>getProcessor</code>、<code>getProcessorProviders</code>、<code>getProcessorProvider</code></li>
+        <li>MCP：<code>getMcpServers</code>、<code>getMcpServerDetails</code>、<code>getMcpServerTools</code>、<code>getMcpServerTool</code>、<code>getMcpServerResources</code>、<code>readMcpServerResource</code>、<code>getMcpServerEvents</code>、<code>pollMcpServerEvent</code>、<code>streamMcpServerEvent</code>、<code>emitMcpServerEvent</code>、<code>listStoredMCPClients</code>、<code>getStoredMCPClient</code>。事件方法是实验性的，见 <a href="#mcp-events">事件和 Apps</a>。</li>
+        <li>A2A：<code>getA2A</code>、<code>getA2AV1</code></li>
+        <li>Vector：<code>getVector</code>、<code>listVectors</code>、<code>listEmbedders</code></li>
+        <li>Score：<code>listScorers</code>、<code>getScorer</code>、<code>listScores</code>、<code>listScoresByScorerId</code>、<code>listScoresByRunId</code>、<code>listScoresByEntityId</code>、<code>listScoresBySpan</code>，以及 <code>getScoreAggregate</code>、<code>getScoreBreakdown</code>、<code>getScoreTimeSeries</code>、<code>getScorePercentiles</code></li>
+        <li>Trace：<code>getTrace</code>、<code>getTraceLight</code>、<code>getSpan</code>、<code>getTraceTrajectory</code>、<code>listTraces</code>、<code>listTracesLight</code>、<code>getTraces</code>、<code>listBranches</code>、<code>getBranch</code>、<code>getTraceQueryFields</code>、<code>getTraceQueryValues</code></li>
+        <li>Log：<code>listLogs</code>、<code>getLogForRun</code>、<code>listLogTransports</code>、<code>listLogsVNext</code></li>
+        <li>Dataset / experiment：<code>listDatasets</code>、<code>getDataset</code>、<code>listDatasetItems</code>、<code>getDatasetItem</code>、<code>listExperiments</code>、<code>getExperiment</code>，以及同文件里的 item history、version、experiment result 方法</li>
+        <li>其他：<code>listBackgroundTasks</code>、<code>getBackgroundTask</code>、<code>listSchedules</code>、<code>getSchedule</code>、<code>listScheduleTriggers</code>、<code>listWorkspaces</code>、<code>getWorkspace</code>、<code>listStoredSkills</code>、<code>getStoredSkill</code>、<code>listToolProviders</code>、<code>getToolProvider</code>、<code>listFeedback</code> 和一组 feedback、metric 查询方法</li>
+      </ul>
+      <div class="note">
+        <p><code>getAgent()</code> 返回的对象上，本次确认的方法包括：<code>details</code>、<code>generate</code>、<code>generateLegacy</code>、<code>stream</code>、<code>network</code>、<code>approveToolCall</code>、<code>approveToolCallGenerate</code>、<code>resumeStream</code>、<code>resumeStreamUntilIdle</code>、<code>sendMessage</code>、<code>queueMessage</code>、<code>sendSignal</code>、<code>queueSignal</code>、<code>subscribeToThread</code>、<code>abortThread</code>、<code>listVersions</code>、<code>createVersion</code>、<code>activateVersion</code>。文件后部还有更多方法。没有逐行抄完的，不要当成不存在。</p>
+      </div>
+      <p><code>getWorkflow()</code> 返回：<code>details</code>、<code>runs</code>、<code>runById</code>、<code>deleteRunById</code>、<code>getSchema</code>、<code>createRun</code>。</p>
+      <p><code>createRun()</code> 返回的 Run：<code>start</code>、<code>startAsync</code>、<code>stream</code>、<code>resume</code>、<code>resumeAsync</code>、<code>resumeStream</code>、<code>resumeNoWait</code>、<code>cancel</code>、<code>cancelRun</code>、<code>restart</code>、<code>restartAsync</code>、<code>timeTravel</code>、<code>timeTravelAsync</code>、<code>timeTravelStream</code>、<code>observe</code>、<code>observeStream</code>。</p>
+      <p><code>getMemoryThread()</code> 返回：<code>get</code>、<code>update</code>、<code>delete</code>、<code>listMessages</code>、<code>deleteMessages</code>、<code>clone</code>、<code>transfer</code>。</p>
+
+      <h3 id="react">@mastra/react</h3>
+      <p>包入口导出 <code>MastraReactProvider</code>、<code>useMastraClient</code>、<code>useChat</code>、workflow hooks、语音 helper、消息类型。README 写 React 19 或更新。</p>
+      <figure>
+        <figcaption>props：baseUrl、headers、apiPrefix、credentials、customFetch</figcaption>
+        <pre>import { MastraReactProvider } from '@mastra/react'
+
+export function App({ children }) {
+  return &lt;MastraReactProvider baseUrl="http://localhost:4111"&gt;{children}&lt;/MastraReactProvider&gt;
+}</pre>
+      </figure>
+      <ul>
+        <li><code>useMastraClient</code></li>
+        <li><code>useChat</code></li>
+        <li><code>useStreamWorkflow</code></li>
+        <li><code>useCreateWorkflowRun</code>、<code>useCancelWorkflowRun</code></li>
+        <li><code>useSpeechRecognition</code>、<code>recordMicrophoneToFile</code>、<code>playStreamWithWebAudio</code></li>
+        <li>组件 <code>WorkflowStepFactory</code></li>
+      </ul>
+      <p><code>package.json</code> 还有子路径 <code>@mastra/react/ui</code>、<code>@mastra/react/chat</code>、<code>@mastra/react/hooks/*</code>、<code>@mastra/react/styles.css</code>。</p>
+      <p><code>@mastra/react/ui</code> 导出 <code>Entity</code>、<code>Code</code>、<code>Icon</code>、<code>IconButton</code>、<code>Icons</code>、<code>Tooltip</code>、<code>Message</code>、<code>MessageFactory</code>。</p>
+      <p><code>hooks/*</code> 下还有大量数据 hook，例如 <code>useAgents</code>、<code>useMemory</code>、<code>useWorkflows</code>、<code>useTraces</code>。它们在 <code>client-sdks/react/src/hooks/</code>。本次没有把每个 hook 的参数抄进来。做产品 UI 时再按子路径的 index.ts 读。</p>
+
+      <h3 id="aisdk">AI SDK</h3>
+      <p><code>@mastra/ai-sdk</code> 不替代 Vercel AI SDK。它把 Mastra 的 agent、workflow、network 流转换成 AI SDK UI 能消费的格式。</p>
+      <p>服务端在 <code>server.apiRoutes</code> 里加 <code>chatRoute</code>、<code>workflowRoute</code>、<code>networkRoute</code>。导出还包括 <code>handleChatStream</code>、<code>handleWorkflowStream</code>、<code>handleNetworkStream</code>、<code>toAISdkStream</code>、<code>toAISdkV5Stream</code>、<code>withMastra</code>、<code>smoothStream</code>、<code>withSseHeartbeat</code>。</p>
+      <p>聊天 UI 用 AI SDK 自己的 <code>useChat()</code>，从 <code>@ai-sdk/react</code> 导入。请求打到上面的 route。那一页还写了 <code>useCompletion()</code> 和 <code>useObject()</code>。</p>
+
+      <h3 id="studio">Studio</h3>
+      <p>本地地址是 <code>http://localhost:4111</code>。文档写了这些能力：和 Agent 聊天，换模型，看 temperature、top-p；看 tool call 和 trace；把 Workflow 画成图并逐步跑；测 tool；给回答挂 scorer。Swagger 在 <code>http://localhost:4111/swagger-ui</code>。</p>
+      <p>Studio 的源码在 <code>packages/playground</code> 和 <code>packages/playground-ui</code>。用户项目里不需要直接依赖 private 包 <code>@internal/playground</code>。<code>mastra dev</code> 会带上 Studio。</p>
+      <h3 id="otherui">文档里写明的其它 UI</h3>
+      <p>CopilotKit 通过 AG-UI。服务端用 <code>@ag-ui/mastra</code> 的 <code>registerCopilotKit()</code>。前端用 <code>@copilotkit/react-ui</code> 的 <code>CopilotChat</code>。这些包不在本仓库的 <code>client-sdks/</code> 里。</p>
+      <p>同一目录还有 <code>assistant-ui.mdx</code>。它把 assistant-ui 的 <code>useChatRuntime</code> 指到 Mastra agent 的 stream URL。</p>
+
+      <h2 id="features">06 功能清单</h2>
+      <p>下表只列笔记里在文档或包导出中看到的功能。</p>
+      <label class="filter">筛选
+        <input id="feature-q" type="search" placeholder="Agent、Memory、MCP…" aria-label="筛选功能">
+        <span class="count" id="feature-count"></span>
+      </label>
+      <table id="feature-table">
+        <thead><tr><th>功能</th><th>做什么</th><th>包与入口</th></tr></thead>
+        <tbody>
+          <tr><td>模型路由</td><td>用 <code>provider/model</code> 调多家模型。可配 fallback。</td><td><code>@mastra/core</code>。文档 <code>docs/src/content/en/models/index.mdx</code>。源码 <code>ModelRouterLanguageModel</code>。Agent 字段 <code>model</code>。Config 字段 <code>gateways</code>。</td></tr>
+          <tr><td>Agent</td><td>按目标调用模型和 tool。</td><td><code>class Agent</code>，<code>packages/core/src/agent/agent.ts</code>。文档 agents/overview。</td></tr>
+          <tr><td>Subagent / supervisor</td><td>父 Agent 的 <code>agents</code> 把任务分给专用 Agent。</td><td><code>AgentConfig.agents</code>。文档 subagents.mdx。</td></tr>
+          <tr><td>Agent network</td><td>旧的路由 Agent。文档标为 deprecated，要用 supervisor 代替。</td><td>Agent 上仍有 <code>defaultNetworkOptions</code>。client 仍有 <code>network()</code>。文档 agents/networks.mdx。</td></tr>
+          <tr><td>Tool</td><td>schema 加 execute 的可调用函数。</td><td><code>createTool</code>。文档 agents/tools.mdx。</td></tr>
+          <tr><td>MCP</td><td>连接外部 MCP server，或把 Mastra 能力暴露成 MCP。详见 <a href="#mcp">接 MCP</a>。</td><td><code>@mastra/mcp</code> 2.10.0 的 <code>MCPClient</code>、<code>MCPServer</code>。服务端只讲协议修订 <code>2026-07-28</code>。Config 字段 <code>mcpServers</code>。</td></tr>
+          <tr><td>Workflow</td><td>固定步骤的图。</td><td><code>createWorkflow</code>。文档 workflows/overview.mdx。</td></tr>
+          <tr><td>Human-in-the-loop</td><td>Tool 用 <code>requireApproval</code> 或执行中的 <code>suspend()</code>。Workflow 用 suspend / resume / bail。过程见 <a href="#suspend">Suspend and resume</a>。</td><td>文档 agents/human-in-the-loop.mdx 与 workflows/human-in-the-loop.mdx。</td></tr>
+          <tr><td>Message history</td><td>最近消息进入上下文。thread 是会话，resource 是用户。</td><td><code>@mastra/memory</code>。<code>MemoryConfig</code> 的 <code>lastMessages</code>、<code>messageHistory</code>。</td></tr>
+          <tr><td>Working memory</td><td>跨轮保存结构化用户事实。</td><td><code>MemoryConfig.workingMemory</code>。</td></tr>
+          <tr><td>Semantic recall</td><td>用向量找回相关旧消息。还要 vector store。</td><td><code>MemoryConfig.semanticRecall</code>。</td></tr>
+          <tr><td>Observational memory</td><td>Observer 和 Reflector 把长对话压成观察日志。</td><td><code>MemoryConfig.observationalMemory</code>。</td></tr>
+          <tr><td>Knowledge</td><td>跨会话共享的页面、笔记、链接图。Agent 用工具搜索读写。alpha。</td><td><code>@mastra/core/knowledge</code> 的 <code>Knowledge</code>（core 1.82.0 起）。按 scope 隔离，角色分 viewer、contributor、editor、owner。详见 <a href="#update-knowledge">更新梳理 · Knowledge</a>。</td></tr>
+          <tr><td>RAG</td><td>切块、embedding、向量库、检索。</td><td><code>@mastra/rag</code> 的 <code>MDocument</code>，再加一个 vector 包。总览在 reference/rag/overview.mdx。</td></tr>
+          <tr><td>Storage</td><td>按 domain 持久化。</td><td><code>@mastra/libsql</code>、<code>@mastra/pg</code> 等。Config 字段 <code>storage</code>。</td></tr>
+          <tr><td>Voice</td><td>TTS、STT、部分 STS。</td><td><code>voice/</code> 下各包。Agent 字段 <code>voice</code>。Config 字段 <code>tts</code>。</td></tr>
+          <tr><td>Evals</td><td>模型打分或规则打分。</td><td><code>createScorer</code> 在 core。预置在 <code>@mastra/evals</code>。Config 字段 <code>scorers</code>。</td></tr>
+          <tr><td>Observability</td><td>span、log、metric、feedback。</td><td><code>@mastra/observability</code>。Config 字段 <code>observability</code>。</td></tr>
+          <tr><td>Tracing exporter</td><td>把 trace 送到各后端。</td><td><code>@mastra/langfuse</code>、<code>@mastra/langsmith</code>、<code>@mastra/braintrust</code>、<code>@mastra/datadog</code>、<code>@mastra/otel-exporter</code>、<code>@mastra/arize</code>、<code>@mastra/sentry</code>、<code>@mastra/posthog</code>、<code>@mastra/laminar</code>、<code>@mastra/arthur</code>、<code>@mastra/deepeval</code>。</td></tr>
+          <tr><td>Auth</td><td>保护 Studio 和 <code>/api</code>。</td><td><code>@mastra/auth</code> 及 <code>auth/*</code>。字段 <code>server.auth</code>。</td></tr>
+          <tr><td>Channels</td><td>Slack、Discord、Teams、Telegram，以及文档写的 Chat SDK adapter。</td><td><code>@mastra/slack</code> 等。示例 adapter 用 <code>@chat-adapter/slack</code>。Agent 字段 <code>channels</code>。Config 字段 <code>channels</code>。</td></tr>
+          <tr><td>Browser</td><td>打开网页、填表、抽数据。</td><td><code>@mastra/agent-browser</code> 等。Agent 字段 <code>browser</code>。</td></tr>
+          <tr><td>Sandbox</td><td>隔离的命令和文件系统。</td><td><code>Workspace</code>、<code>LocalSandbox</code>。远程包在 <code>workspaces/</code>。Agent 字段 <code>workspace</code>。</td></tr>
+          <tr><td>Harness</td><td>长任务：durable run、后台任务、目标、定时、信号、会话控制器。</td><td>Config 的 <code>agentControllers</code>、<code>backgroundTasks</code>、<code>schedules</code>。Agent 的 <code>durable</code>、<code>goal</code>、<code>signals</code>。</td></tr>
+          <tr><td>Durable agents</td><td>断线或重启后还能接上同一次 run。</td><td>导出路径 <code>@mastra/core/agent/durable</code>。</td></tr>
+          <tr><td>Resumable streams</td><td>每个 run 发布到 stream topic 并留 replay cache。断线重连可续看，<code>observe()</code> 可旁观。</td><td>core 1.83.0 起对所有注册 agent 默认开。Agent 字段 <code>streams</code>。文档 <code>agents/resumable-streams.mdx</code>。</td></tr>
+          <tr><td>Goals</td><td>有目标就继续做，直到完成或预算用完。</td><td><code>AgentConfig.goal</code>，类型 <code>GoalConfig</code>。</td></tr>
+          <tr><td>Schedules</td><td>cron 触发 workflow 或 agent。</td><td>Config 的 <code>scheduler</code>、<code>schedules</code>。workflow 的 <code>schedule</code>。</td></tr>
+          <tr><td>Signals</td><td>向正在跑或空闲的 thread 送输入。</td><td><code>@mastra/core</code>。GitHub 用 <code>@mastra/github-signals</code>。字段 <code>AgentConfig.signals</code>。</td></tr>
+          <tr><td>Skills</td><td>按需加载的任务说明。</td><td><code>createSkill</code>。文档示例从 <code>@mastra/core/skills</code> 导入。</td></tr>
+          <tr><td>PubSub</td><td>进程内或跨进程事件。</td><td>默认 <code>EventEmitterPubSub</code>。可选 Redis、Google Cloud Pub/Sub、Valkey。Config 字段 <code>pubsub</code>。</td></tr>
+          <tr><td>A2A</td><td>把 agent 暴露成远程 agent，或调用远程 agent。</td><td><code>A2AAgent</code> from <code>@mastra/core/a2a</code>。文档写协议 0.3.0。</td></tr>
+          <tr><td>ACP</td><td>把 Claude Code、Cline、OpenCode 这类进程当成 tool 或 subagent。</td><td><code>@mastra/acp</code> 的 <code>AcpAgent</code>。</td></tr>
+          <tr><td>SDK agents</td><td>厂商 SDK 自己跑循环。</td><td><code>@mastra/claude</code>、<code>@mastra/cursor</code>、<code>@mastra/openai</code>。目录 <code>agent-sdks/</code>。</td></tr>
+          <tr><td>Code mode</td><td>让模型在隔离运行时里写代码调用 tool。</td><td><code>@mastra/isolated-vm</code>、<code>@mastra/quickjs</code>。侧边栏有 <code>agents/code-mode.mdx</code>。本次没有读该页正文。</td></tr>
+          <tr><td>Platform Connect</td><td>平台托管凭证的 tool 和 channel。</td><td><code>@mastra/connect</code> 的 <code>tools()</code>、<code>channels()</code>。</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="storage-pkgs">Storage 包</h3>
+      <p>本地起步文档用 <code>LibSQLStore</code>，<code>url: 'file:./mastra.db'</code> 或 <code>:memory:</code>。</p>
+      <ul class="packs">
+        <li>@mastra/astra</li><li>@mastra/azure-ai-search</li><li>@mastra/chroma</li><li>@mastra/clickhouse</li><li>@mastra/cloudflare</li><li>@mastra/cloudflare-d1</li><li>@mastra/convex</li><li>@mastra/couchbase</li><li>@mastra/dsql</li><li>@mastra/duckdb</li><li>@mastra/dynamodb</li><li>@mastra/elasticsearch</li><li>@mastra/lance</li><li>@mastra/libsql</li><li>@mastra/mongodb</li><li>@mastra/mssql</li><li>@mastra/mysql</li><li>@mastra/opensearch</li><li>@mastra/oracledb</li><li>@mastra/pg</li><li>@mastra/pinecone</li><li>@mastra/qdrant</li><li>@mastra/redis</li><li>@mastra/s3vectors</li><li>@mastra/spanner</li><li>@mastra/turbopuffer</li><li>@mastra/turso</li><li>@mastra/upstash</li><li>@mastra/valkey</li><li>@mastra/vectorize</li><li>@mastra/weaviate</li>
+      </ul>
+      <p><code>storage.mdx</code> 列出的 domain：<code>memory</code>、<code>workflows</code>、<code>observability</code>、<code>scores</code>、<code>datasets</code>、<code>experiments</code>、<code>backgroundTasks</code>、<code>schedules</code>、<code>threadState</code>。</p>
+      <p>reference 的 storage overview 列出的 domain：<code>memory</code>、<code>workflows</code>、<code>workflowDefinitions</code>、<code>scores</code>、<code>observability</code>、<code>datasets</code>、<code>experiments</code>。两页不一致。各包实现哪些 domain，本次没有逐个 README 核对。</p>
+
+      <h3 id="voice-pkgs">Voice 包</h3>
+      <p>下面这些在 voice overview 的 frontmatter 里：</p>
+      <ul class="packs">
+        <li>@mastra/voice-aws-nova-sonic</li><li>@mastra/voice-azure</li><li>@mastra/voice-cloudflare</li><li>@mastra/voice-deepgram</li><li>@mastra/voice-elevenlabs</li><li>@mastra/voice-gladia</li><li>@mastra/voice-google</li><li>@mastra/voice-google-gemini-live</li><li>@mastra/voice-murf</li><li>@mastra/voice-modelslab</li><li>@mastra/voice-openai</li><li>@mastra/voice-openai-realtime</li><li>@mastra/voice-sarvam</li><li>@mastra/voice-speechify</li><li>@mastra/voice-inworld</li><li>@mastra/voice-xai-realtime</li><li>@mastra/livekit</li>
+      </ul>
+      <p>仓库里还有 <code>@mastra/voice-mistral</code>、<code>@mastra/voice-playai</code>。它们在 <code>voice/*/package.json</code>，但不在那一页的 frontmatter 里。本文不把它们写成文档已介绍的提供方。</p>
+
+      <h3 id="enterprise">企业版</h3>
+      <ul>
+        <li>任何名为 <code>ee/</code> 的目录走 <code>ee/LICENSE</code>。</li>
+        <li>点名的入口：<code>@mastra/core/auth/ee</code>、<code>@mastra/core/agent-builder/ee</code>、<code>@mastra/editor/ee</code>。</li>
+        <li>其它内容是 Apache-2.0。</li>
+        <li>企业功能可以本地开发和测试。生产使用要书面协议，并且要有效 License Key。</li>
+        <li>文档把 Fine-Grained Authorization 标成企业版。源码在 <code>packages/core/src/auth/ee/</code>。<code>server.rbac</code> 也指向 <code>@mastra/core/auth/ee</code>。</li>
+        <li><code>@mastra/connect</code> 的包 license 是 Apache-2.0。<code>packages/connect/NOTICE.md</code> 说 <code>src/providers/</code> 里生成的 schema 来自 Elastic License 2.0 的上游模板。这不是 <code>ee/</code> 企业许可。</li>
+      </ul>
+
+      <h2 id="minimal">07 一条最小用法</h2>
+      <p>下面每步都能对上文档。代码只保留文档里的必要片段。</p>
+      <ol>
+        <li>创建项目：<code>npm create mastra@latest</code>。</li>
+        <li>若要手写最小 Agent，按 <code>docs/src/content/en/docs/getting-started/_partial-agent-quickstart.mdx</code> 安装依赖。</li>
+        <li>写 Tool。文档是 <code>agents/tools.mdx</code>。形状是 <code>createTool({ id, description, inputSchema, outputSchema, execute })</code>。<code>execute</code> 的第一个参数是校验后的输入。</li>
+        <li>写 Agent。文档是 <code>agents/overview.mdx</code>。</li>
+      </ol>
+      <figure>
+        <figcaption>文档原文的 model 是站点替换后的 token。手写时用 provider/model。不要写成 openai:model。不要自己 import 厂商 SDK，除非文档要求。把 tool 放进 tools: { weatherTool }</figcaption>
+        <pre>import { Agent } from '@mastra/core/agent'
+
+export const testAgent = new Agent({
+  id: 'test-agent',
+  name: 'Test Agent',
+  instructions: 'You are a helpful assistant.',
+  model: 'openai/&lt;model&gt;',
+})</pre>
+      </figure>
+      <figure>
+        <figcaption>src/mastra/index.ts 的注册形状</figcaption>
+        <pre>import { Mastra } from '@mastra/core'
+
+export const mastra = new Mastra({
+  agents: { testAgent },
+})</pre>
+      </figure>
+      <ol start="6">
+        <li>本进程直接调：<code>mastra.getAgentById('test-agent')</code>，再 <code>agent.generate(...)</code>。</li>
+        <li>要给前端调：先 <code>npx mastra dev</code>。再在另一个应用里 <code>new MastraClient({ baseUrl: 'http://localhost:4111' })</code>，<code>client.getAgent('test-agent').generate(...)</code>。注册表 key 和 agent id 在文档示例里经常相同。若不相同，服务端 <code>getAgent</code> 用的是 Mastra 配置对象的 key。Client 的 <code>getAgent</code> 参数名是 <code>agentId</code>。本次没有逐条核对 HTTP 路径用 key 还是 id。接前端时先看 <code>http://localhost:4111/api</code> 或 Swagger。</li>
+        <li>React：用 <code>MastraReactProvider</code> 包住应用。子树里用 <code>useMastraClient()</code> 或 <code>useChat()</code>。</li>
+        <li>若聊天 UI 已经是 Vercel AI SDK：在 Mastra 的 <code>server.apiRoutes</code> 加 <code>chatRoute({ path: '/chat/:agentId' })</code>。前端 <code>useChat()</code> 打这个 path。</li>
+      </ol>
+      <div class="note">
+        <p>要记忆时再加 <code>@mastra/memory</code> 和 <code>@mastra/libsql</code>。不要在没有 storage 的情况下假设消息会留下。</p>
+      </div>
+
+      <h2 id="bounds">08 版本与边界</h2>
+      <table>
+        <thead><tr><th>包</th><th>版本</th><th>上一轮</th><th>license 字段</th></tr></thead>
+        <tbody>
+          <tr><td><code>@mastra/core</code></td><td>1.85.0</td><td>1.79.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>mastra</code> CLI</td><td>1.40.1</td><td>1.35.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>create-mastra</code></td><td>1.40.1</td><td>1.35.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/client-js</code></td><td>1.61.1</td><td>1.56.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/react</code></td><td>1.15.2</td><td>1.12.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/ai-sdk</code></td><td>1.12.0</td><td>1.11.2</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/server</code></td><td>1.85.0</td><td>1.79.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/memory</code></td><td>1.41.2</td><td>1.39.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/mcp</code></td><td>2.10.0</td><td>2.5.0</td><td>Apache-2.0</td></tr>
+        </tbody>
+      </table>
+      <p>Apache-2.0 覆盖 <code>ee/</code> 以外、且没有单独第三方许可的代码。本轮各包变化的明细见 <a href="#update">11 更新梳理</a>。更早的 <code>-alpha</code> 时代差异见 <a href="#versions">版本差异</a>。</p>
+      <ul>
+        <li>不提供 OpenAI、Anthropic、Google 等模型的 key。模型字符串 <code>provider/model</code> 会去读对应环境变量，例如 OpenAI 要 <code>OPENAI_API_KEY</code>。缺 key 时运行时会报要设哪个变量。</li>
+        <li>不把模型调用变成无厂商代理。Responses API 仍走你选中的 Mastra agent。</li>
+        <li>不自带生产数据库。默认内存存储在进程退出后丢失。</li>
+        <li>不在你直接 import 实例时自动发现文件式 Agent。</li>
+        <li><code>@mastra/temporal</code> 文档写明还不是生产可用。</li>
+      </ul>
+      <p>贡献者本地构建见 <code>DEVELOPMENT.md</code>：<code>pnpm run setup</code>，再按包 <code>pnpm build:*</code>。那是改这个仓库，不是使用框架的必经步骤。</p>
+
+      <h2 id="diffs">09 文档和源码的差异</h2>
+      <ol>
+        <li><code>README.md</code> 写模型路由连接 “40+ providers”。<code>docs/src/content/en/models/index.mdx</code> 写 220 providers、8413 models。models 页注明由 <code>generate-model-docs.ts</code> 生成。数字以生成页为准。README 的 “40+” 已过时。</li>
+        <li>README 的链接和当前文件不一致。存储旧链接指向 <code>/docs/server-db/storage</code>，当前页是 <code>docs/src/content/en/docs/storage.mdx</code>。对话历史旧链接指向 <code>/docs/memory/conversation-history</code>，当前页是 <code>memory/message-history.mdx</code>。MCP 旧链接指向 <code>/docs/tools-mcp/mcp-overview</code>，当前页是 <code>connections/mcp.mdx</code>。RAG 旧链接指向 <code>/docs/rag/overview</code>，当前总览在 <code>reference/rag/overview.mdx</code>。站点是否做了重定向，本次没有打开线上页面核对。</li>
+        <li>Node 版本下限不一致。deployment overview 和 create-mastra README 写 <code>v22.13.0</code>。<code>DEVELOPMENT.md</code> 写 Node 22 需 <code>v22.19.0</code>，或 <code>v24.11.0</code>。quickstart partial 写 Node.js 22.18.0 起可以直接跑 TypeScript。</li>
+        <li>Storage domain 列表不一致。产品页有 <code>backgroundTasks</code>、<code>schedules</code>、<code>threadState</code>。reference 页有 <code>workflowDefinitions</code>，没有那三项。Config 注释确实提到 schedules domain 和 thread 级 durable state。</li>
+        <li><code>server/mastra-client.mdx</code> 写 Client SDK 面向浏览器。client-js README 写 browser 或 server 都可以用。<code>ClientOptions.fetch</code> 允许替换 fetch。源码没有把类限制成浏览器。</li>
+        <li><code>packages/core/src/memory/types.ts</code> 把数字形式的 <code>lastMessages</code> 标成 deprecated，建议用 <code>messageHistory</code>。message-history 文档仍把 <code>lastMessages: 10</code> 当默认教法，同页后面也写了 <code>messageHistory</code>。</li>
+        <li>server overview 的功能列表只点名 Express 和 Hono。同目录 <code>server-adapters.mdx</code> 还有 Elysia、Fastify、Koa、NestJS、Next.js、TanStack Start。</li>
+        <li><code>class Mastra</code> 的模板注释仍写 <code>TVNextNetworks</code>。当前 Config 没有 <code>networks</code> 字段。networks 文档已把 agent network 标为 deprecated。client 仍保留 <code>network()</code>。</li>
+      </ol>
+      <p>没有把「文档示例用 <code>getAgentById</code>，自定义路由示例用 <code>getAgent</code>」算成冲突。两个方法都在源码里。它们的参数不一样。</p>
+      <h3 id="gaps">这次没核对完的地方</h3>
+      <ul>
+        <li>各 storage 包实际实现哪些 domain，没有逐个核对 README。</li>
+        <li><code>MastraClient</code> 和 Agent client 在已列出的方法之后还有更多方法，没有逐行抄完。</li>
+        <li><code>agents/code-mode.mdx</code> 只确认侧边栏有这一页，没有读正文。</li>
+        <li>README 旧链接是否在线上做了重定向，没有打开网站核对。</li>
+      </ul>
+      <p class="src">全文依据 explorations/mastra-framework-learning-guide.md。</p>
+
+      <h2 id="extra">10 补充问题</h2>
+      <p>这一节是后面核对过的几个使用问题。出处和笔记第 11 节相同。</p>
+
+      <h3 id="vue">Vue</h3>
+      <p>仓库的前端专用包是 <code>@mastra/react</code>。没有 <code>@mastra/vue</code>。</p>
+      <p>Vue 的官方接法是 Nuxt。在 Nuxt 项目里运行 <code>npx mastra@latest init</code>。服务端路由直接调用 Agent。聊天界面安装 <code>@mastra/ai-sdk</code>、<code>@ai-sdk/vue</code> 和 <code>ai</code>。</p>
+      <p>普通 Vue 页面也可以用 <code>@mastra/client-js</code> 调用已经跑起来的 Mastra server。</p>
+      <p class="src">依据：client-sdks/ 目录；docs/src/content/en/integrations/frameworks/nuxt.mdx。</p>
+
+      <h3 id="multi">多 Agent</h3>
+      <p>支持。文档把做法分成四种。</p>
+      <table>
+        <thead><tr><th>模式</th><th>谁做决定</th><th>怎么写</th></tr></thead>
+        <tbody>
+          <tr><td>Supervisor</td><td>一个主 Agent</td><td>父 Agent 的 <code>agents</code> 字段挂子 Agent。子 Agent 写 <code>description</code>。父 Agent 用 instructions 和这些 description 决定何时委派。</td></tr>
+          <tr><td>Workflow</td><td>事先写好的步骤图</td><td><code>createWorkflow</code>。步骤里再调 Agent。</td></tr>
+          <tr><td>Handoff</td><td>当前的专家 Agent</td><td>Workflow 做路由。控制权交给下一个 Agent。文档说用 Agent、Workflow 和 Memory 组合实现。</td></tr>
+          <tr><td>Council</td><td>最后的汇总步骤</td><td>多个 Agent 用 <code>.parallel()</code> 同时做，再汇总。没有单独的 Council API。</td></tr>
+        </tbody>
+      </table>
+      <p>Agent network 已标为 deprecated。新代码用 Supervisor。</p>
+      <p class="src">依据：docs/src/content/en/docs/guides/multi-agent-systems.mdx；docs/src/content/en/docs/subagents.mdx；docs/src/content/en/docs/agents/networks.mdx。</p>
+
+      <h3 id="intent">意图识别</h3>
+      <p>没有名为「意图识别」的单独产品。对应能力是 <code>Classifier</code>。</p>
+      <p><code>Classifier</code> 向决策模型提固定问题，返回带类型的答案。它不解析模型生成的自由文本。问题有三种：</p>
+      <ul>
+        <li><code>choice</code>：在你写的类别里选一个，例如 billing、support。</li>
+        <li><code>score</code>：打一个数字分。</li>
+        <li><code>boolean</code>：给出「是」的概率。</li>
+      </ul>
+      <p>Workflow 里用 <code>.classifier(router)</code>，再 <code>.branch()</code> 按答案走不同步骤。也可以挂到 Agent 上。<code>ClassifierProcessor</code> 根据答案调用 <code>abort()</code> 或 <code>filter()</code>。</p>
+      <p>类别不固定、步骤也不能事先写死时，用 Supervisor。主 Agent 看子 Agent 的 <code>description</code>，自己决定交给谁。</p>
+      <p class="src">依据：docs/src/content/en/reference/classifier/classifier.mdx；docs/src/content/en/docs/workflows/control-flow.mdx；docs/src/content/en/reference/processors/classifier-processor.mdx。</p>
+
+      <h3 id="decision">决策模型</h3>
+      <p>厂商已经提供 <code>decisionModel()</code> 时，接入很短。<code>Classifier</code> 只接受决策模型。它不接受 <code>'provider/model'</code> 字符串，也不接受普通语言模型。</p>
+      <p>文档写明 OpenAI、Anthropic、Google、TypeSafe AI 都有 <code>decisionModel()</code>。旧名字 <code>evaluationModel()</code> 还在，是废弃别名。Mastra 调用 <code>doDecide()</code>。旧 provider 只有 <code>doEvaluate()</code> 时，会走这个旧方法。</p>
+      <figure>
+        <figcaption>问题在构造时写死。choice 的答案类型是你写的类别。</figcaption>
+        <pre>import { Classifier } from '@mastra/core/classifier'
+
+const router = new Classifier({
+  id: 'ticket-router',
+  model: typeSafeAi.decisionModel('model-id'),
+  questions: {
+    route: {
+      type: 'choice',
+      criteria: {
+        billing: 'Billing, invoices, refunds, and payments',
+        support: 'Account access and product help',
+      },
+    },
+  },
+})</pre>
+      </figure>
+      <p>同一份 <code>Classifier</code> 可以放进 Workflow、<code>ClassifierProcessor</code>，或 Tool 审批。模型拒绝回答时，答案类型是 <code>refusal</code>。<code>choice</code> 是 <code>undefined</code>。</p>
+      <p>自建模型要实现 AI SDK 的 <code>DecisionModelV4</code>。核心方法是 <code>doDecide()</code>。<code>MastraDecisionModel</code> 包住它。没有这个接口的聊天模型，不能直接放进 <code>Classifier</code>。那种情况用普通 Agent 做 Supervisor。</p>
+      <p class="src">依据：docs/src/content/en/reference/classifier/classifier.mdx；packages/core/src/classifier/index.ts；docs/src/content/en/docs/agents/human-in-the-loop.mdx。</p>
+
+      <h3 id="local-app">本地工作台</h3>
+      <p>可以整套跑在本机。框架不提供一个装好就能用的个人工作台成品。</p>
+      <ul>
+        <li>Studio：<code>npm run dev</code> 或 <code>npx mastra dev</code>。地址是 <code>http://localhost:4111</code>。可以聊天、换模型、看 tool call 和 trace、逐步跑 Workflow、测 tool。</li>
+        <li>本地数据：<code>LibSQLStore</code>，<code>url: 'file:./mastra.db'</code>。不配 storage 时，数据在内存里，进程退出就没了。这个文件适合单进程本地使用。</li>
+        <li>本地文件和命令：<code>LocalSandbox</code> 在指定目录跑 shell。<code>LocalFilesystem</code> 读、写、搜索本机目录。Skill 可以放在本地目录。</li>
+        <li>本地模型：模型页有 Ollama。安装 <code>ollama-ai-provider-v2</code>，再按 Agent 文档接到 Agent。云模型仍要你自己的 API key。</li>
+      </ul>
+      <p>一条本地组合是：本机 <code>mastra dev</code>，Ollama 或你自己的模型 key，<code>file:./mastra.db</code>，一个带 <code>LocalSandbox</code> 的 Agent，再加上你自己的 Vue 或 React 页面。</p>
+      <p class="src">依据：docs/src/content/en/docs/studio/overview.mdx；docs/src/content/en/docs/storage.mdx；docs/src/content/en/docs/sandbox/overview.mdx；docs/src/content/en/docs/skills.mdx；docs/src/content/en/models/providers/ollama.mdx。</p>
+
+      <h3 id="zcode">类似 Zcode 的本地应用</h3>
+      <p>可以做 Agent 运行时。Mastra 不自带 Zcode 那种桌面端。</p>
+      <p>Zcode 是智谱的本地 Agentic Development Environment。它打开一个项目目录。Agent 在同一个任务里改文件、跑终端、看 Git、预览页面，并一直做到目标完成。桌面窗口、编辑器和审查界面是产品本身。</p>
+      <ul>
+        <li>本地工作区：<code>LocalSandbox</code> 的 <code>workingDirectory</code>。<code>execute_command</code> 可以跑 Git、构建和测试。</li>
+        <li>长任务：Agent 的 <code>goal</code>。目标存在 thread 里。judge 模型判断是否完成，或预算用完才停。需要 storage 和 Memory。</li>
+        <li>本机数据：<code>file:./mastra.db</code>。</li>
+        <li>扩展：MCP、Skills、Browser。</li>
+        <li>界面：本机 server 起来后，用 <code>@mastra/client-js</code> 接 Electron 或 Tauri。Vue 页面也能接。</li>
+      </ul>
+      <p>要自己做的是产品壳：窗口、文件树、编辑器、diff 审查、终端面板、权限弹窗。Studio 是开发调试界面，不是这个桌面 IDE。</p>
+      <p class="src">依据：docs/src/content/en/docs/sandbox/overview.mdx；docs/src/content/en/docs/harness/goals.mdx。Zcode 的产品说明来自 https://zcode.z.ai/cn/docs/welcome 。</p>
+
+      <h3 id="cli">CLI 调用</h3>
+      <p>支持。终端里调用 Agent 用 <code>mastra api</code>。它请求已经跑起来的 Mastra server。输入和输出都是 JSON。</p>
+      <p>先启动服务。<code>npx mastra dev</code> 的默认地址是 <code>http://localhost:4111</code>。</p>
+      <figure>
+        <figcaption>成功写到 stdout。失败写到 stderr，退出码不是 0。</figcaption>
+        <pre>npx mastra api agent list
+npx mastra api agent run weather-agent '{"messages":"What is the weather in London?"}'
+npx mastra api tool execute get-weather '{"location":"San Francisco"}'
+npx mastra api workflow run start data-pipeline '{"inputData":{"source":"s3://bucket/data.csv"}}'</pre>
+      </figure>
+      <p>指定别的服务用 <code>--url</code>。本地默认不会自动带登录凭证。要带请求头就用 <code>--header</code>。<code>mastra api</code> 还能管 thread、memory、trace、log、score、dataset、experiment。某个子命令的参数看 <code>mastra api &lt;resource&gt; &lt;action&gt; --help</code>。</p>
+      <p><code>mastra</code> 这条 CLI 本身还负责 <code>dev</code>、<code>build</code>、<code>start</code>、<code>studio</code>、<code>deploy</code>、<code>lint</code>。这些是管项目，不是直接对 Agent 说话。</p>
+      <p class="src">依据：docs/src/content/en/reference/cli/mastra.mdx；docs/src/content/en/docs/develop.mdx；packages/cli/src/commands/api/index.ts。</p>
+
+      <h3 id="approval">审批危险操作</h3>
+      <p>支持。Tool 执行前可以停下来等人批。模型已经选好工具和参数，<code>execute</code> 还没跑。</p>
+      <ul>
+        <li>某个 Tool 上设 <code>requireApproval: true</code>。只拦这个工具。</li>
+        <li>某次 <code>stream()</code> 或 <code>generate()</code> 上设 <code>requireToolApproval: true</code>。这次调用里的每个工具都要批。</li>
+        <li><code>requireToolApproval</code> 也可以是函数。它能看到 <code>toolName</code>、<code>args</code>、<code>requestContext</code>。返回 <code>true</code> 才暂停。文档示例用 <code>Classifier</code> 判断这次调用是不是破坏性、不可逆、很贵，或碰到敏感数据。函数抛错时，默认改成要审批。</li>
+      </ul>
+      <p>流里会出现 <code>tool-call-approval</code>，里面有 <code>toolCallId</code>、<code>toolName</code>、<code>args</code>。你调用 <code>approveToolCall()</code> 或 <code>declineToolCall()</code>。拒绝时可以带 <code>reason</code>。模型会看到这句话。不写 reason 时，模型收到 <code>Tool call was not approved by the user</code>。</p>
+      <p>Workspace 工具另有一层。<code>tools.requireApproval</code> 默认是 <code>false</code>。可以只给写文件、删文件、跑命令打开。<code>requireReadBeforeWrite: true</code> 时，Agent 必须先读过这个文件，才能改它。</p>
+      <div class="note">
+        <p>文件工具和命令工具的策略是分开的。你只拦写文件，Agent 仍可能用 <code>execute_command</code> 去写同一个路径。<code>LocalSandbox</code> 默认就在本机跑命令。文档写明它不是隔离的，也不算安全。</p>
+      </div>
+      <p>源码层还有两个配置位（<code>packages/core/src/tools/tool.ts:273</code>）。<code>needsApprovalFn</code> 是每个工具自己的权威判定，存在时优先于 <code>requireApproval</code>，运行时按参数动态决定。<code>beforeApproval</code> 在审批门之前跑，返回 <code>{ proceed: false, output }</code> 可以不挂起、直接把 output 还给模型。明显不合法的调用在这里挡掉，不打扰人。</p>
+      <p>等人不是阻塞线程。run 会 <code>suspend()</code>，快照落到 workflows 存储；流里推 <code>tool-call-approval</code> chunk，payload 带 <code>runId</code>、<code>toolCallId</code>、<code>toolName</code>、<code>args</code>、<code>resumeSchema</code>（<code>loop/workflows/agentic-execution/tool-call-step.ts:577</code>）。所以审批可以发生在几分钟后、另一个进程、甚至服务器重启之后。HTTP 侧四个入口：<code>POST /api/agents/:id/approve-tool-call</code>、<code>/decline-tool-call</code>、<code>GET /suspended-runs</code>（重启后仍可找回）、<code>POST /resume-stream</code>（带 <code>runId</code> + <code>resumeData</code> 续流）。</p>
+      <p>这一节只覆盖执行前审批。执行中的 <code>suspend()</code>、Workflow 的暂停和恢复、拒绝用的 <code>bail()</code>，见下方三节。把审批接到飞书等外部平台，见「审批接外部平台」。</p>
+      <p class="src">依据：docs/src/content/en/docs/agents/human-in-the-loop.mdx；docs/src/content/en/reference/workspace/workspace-class.mdx；docs/src/content/en/docs/sandbox/filesystem.mdx；docs/src/content/en/docs/sandbox/overview.mdx；packages/core/src/tools/tool.ts:273；loop/workflows/agentic-execution/tool-call-step.ts:577、:612；packages/server/src/server/handlers/agents.ts:2778、:2918、:3037。</p>
+
+      <h3 id="builtin-tools">默认工具</h3>
+      <p>只写 <code>new Agent({...})</code>，没有 Read、Edit、Grep。工具要你自己用 <code>createTool</code> 加，或者给 Agent 配 <code>workspace</code>。</p>
+      <p>配了 filesystem 之后，正式名字带 <code>mastra_workspace_</code> 前缀。常量在 <code>packages/core/src/workspace/constants/index.ts</code>。</p>
+      <table>
+        <thead><tr><th>工具</th><th>做什么</th></tr></thead>
+        <tbody>
+          <tr><td><code>mastra_workspace_read_file</code></td><td>读文件</td></tr>
+          <tr><td><code>mastra_workspace_write_file</code></td><td>新建或覆盖文件</td></tr>
+          <tr><td><code>mastra_workspace_edit_file</code></td><td>按匹配文本替换</td></tr>
+          <tr><td><code>mastra_workspace_list_files</code></td><td>列目录</td></tr>
+          <tr><td><code>mastra_workspace_grep</code></td><td>用正则搜文件内容</td></tr>
+          <tr><td><code>mastra_workspace_delete</code></td><td>删文件或目录</td></tr>
+          <tr><td><code>mastra_workspace_file_stat</code></td><td>看文件信息</td></tr>
+          <tr><td><code>mastra_workspace_mkdir</code></td><td>建目录</td></tr>
+          <tr><td><code>mastra_workspace_ast_edit</code></td><td>按代码结构改。要安装 <code>@ast-grep/napi</code> 才有</td></tr>
+        </tbody>
+      </table>
+      <p>配了 sandbox 之后还有 <code>mastra_workspace_execute_command</code>、<code>mastra_workspace_get_process_output</code>、<code>mastra_workspace_kill_process</code>。产品文档的 sandbox 表有时写成短名 <code>execute_command</code>。源码常量是带前缀的全名。</p>
+      <p>还要再打开对应能力，才会多出这些：</p>
+      <ul>
+        <li>搜索：<code>mastra_workspace_search</code>、<code>mastra_workspace_index</code>。filesystem 只读时没有 <code>index</code>。</li>
+        <li>LSP：<code>mastra_workspace_lsp_inspect</code>。</li>
+        <li>Skill：<code>skill</code>、<code>skill_search</code>、<code>skill_read</code>。这三个没有 <code>mastra_workspace_</code> 前缀。</li>
+        <li>电脑操作：截图、点击、双击、右键、移动、拖拽、输入、按键、滚动、屏幕信息、等待。名字都是 <code>mastra_workspace_computer_*</code>。</li>
+      </ul>
+      <p>名字可以改短。例如把 <code>mastra_workspace_read_file</code> 暴露成 <code>view</code>。配置 key 仍用 <code>WORKSPACE_TOOLS</code> 常量。模型看到的是改过的名字。</p>
+      <p class="src">依据：packages/core/src/workspace/constants/index.ts；docs/src/content/en/reference/workspace/workspace-class.mdx；docs/src/content/en/docs/sandbox/overview.mdx；docs/src/content/en/docs/sandbox/filesystem.mdx。</p>
+
+      <h3 id="suspend">Suspend and resume</h3>
+      <p>这是 Workflow 的暂停引擎。一个 step 的 <code>execute</code> 里调用 <code>suspend()</code>，整条 workflow 停在这一步。当前状态写成 snapshot，存进你配的 storage。进程重启、换一次部署之后，还能用同一个 <code>runId</code> 接着跑。</p>
+      <p>这一步可以声明两份 schema。</p>
+      <table>
+        <thead><tr><th>Schema</th><th>谁来填</th><th>做什么</th></tr></thead>
+        <tbody>
+          <tr><td><code>suspendSchema</code></td><td>step 调用 <code>suspend(payload)</code></td><td>告诉外面为什么停、还缺什么</td></tr>
+          <tr><td><code>resumeSchema</code></td><td>之后的 <code>resume({ resumeData })</code></td><td>把人、回调或定时器交来的数据送回 step</td></tr>
+        </tbody>
+      </table>
+      <p><code>execute</code> 能拿到 <code>inputData</code>、<code>resumeData</code>、<code>suspend</code>、<code>suspendData</code>。第一次进入时 <code>resumeData</code> 是空的。条件不满足就停。</p>
+      <figure>
+        <figcaption>没有答复就暂停。有了 <code>approved: true</code> 才往下做。</figcaption>
+        <pre>execute: async ({ inputData, resumeData, suspend }) =&gt; {
+  const { approved } = resumeData ?? {}
+  if (!approved) {
+    return await suspend({ reason: 'Human approval required.' })
+  }
+  return { output: `Email sent to ${inputData.userEmail}` }
+}</pre>
+      </figure>
+      <p><code>run.start()</code> 回来时看 <code>status</code>。停住时它是 <code>suspended</code>。<code>result.suspended</code> 是停住的路径。嵌套 workflow 时，一项可以是 <code>['nested-workflow', 'step-1']</code>。<code>result.steps[stepId].suspendPayload</code> 就是传给 <code>suspend()</code> 的内容。</p>
+      <p>调用 <code>await suspend()</code> 时，引擎做这几件事：</p>
+      <ol>
+        <li>停在这一步。</li>
+        <li>把 workflow 当前状态写成 snapshot。</li>
+        <li>把 snapshot 写入 storage。</li>
+        <li>把这一步标成 <code>suspended</code>。</li>
+        <li>以后 <code>resume()</code> 读回这份 snapshot，从这一步再往下走。</li>
+      </ol>
+      <p>Snapshot 里有：每个 step 的状态、已经完成的 step 的输出、走过的路径、暂停中的 step 和它的 metadata、每个 step 还剩的重试次数、恢复所需的上下文。示例 JSON 里能看到 <code>runId</code>、<code>status</code>、<code>context.input</code>、某一步的 <code>suspendPayload</code>、<code>resumePayload</code>、<code>serializedStepGraph</code>、<code>suspendedPaths</code>。</p>
+      <p>已经成功的 step 留在 snapshot 里，恢复时不再跑。停住的那个 step 会再进一次 <code>execute</code>。这次带上新的 <code>resumeData</code>，以及上次 <code>suspend()</code> 存下的 <code>suspendData</code>。</p>
+      <p><code>resume()</code> 可以从 HTTP、按钮、定时器或别的进程调用。只有 <code>runId</code> 时，先用这个 id 建回 run。</p>
+      <figure>
+        <figcaption><code>resume()</code> 返回 Promise。要流式事件时用 <code>run.resumeStream()</code>。</figcaption>
+        <pre>const run = await workflow.createRun({ runId: '123' })
+const result = await run.resume({
+  step: 'step-1',
+  resumeData: { approved: true },
+})</pre>
+      </figure>
+      <table>
+        <thead><tr><th>参数</th><th>作用</th></tr></thead>
+        <tbody>
+          <tr><td><code>resumeData</code></td><td>符合这一步 <code>resumeSchema</code> 的数据。可选。</td></tr>
+          <tr><td><code>step</code></td><td>step 对象、step id，或它们的数组。传对象时 <code>resumeData</code> 有类型。只停了一个 step 时可以不传。停了多个时必须写明。</td></tr>
+          <tr><td><code>requestContext</code></td><td>这次恢复使用的 request context。</td></tr>
+          <tr><td><code>forEachIndex</code></td><td><code>.foreach()</code> 里从 0 开始的某一轮。其它轮继续停着。不传时，这一 step 里所有停住的轮次都用同一份 <code>resumeData</code>。</td></tr>
+          <tr><td><code>retryCount</code></td><td>嵌套 workflow 的可选重试次数。</td></tr>
+          <tr><td><code>outputOptions.includeState</code></td><td>为真时，结果里带上 workflow state。</td></tr>
+          <tr><td><code>tracingOptions</code></td><td>根 span 名字、metadata、tags、trace id。开了 tracing 时，结果上还有可选的 <code>traceId</code> 和 <code>spanId</code>。</td></tr>
+        </tbody>
+      </table>
+      <p><code>result.suspended[0]</code> 可以直接传给 <code>step</code>。进程不在了，用 <code>workflow.getWorkflowRunById(runId)</code> 把 snapshot 读回来，再用 <code>createWorkflowStateReader()</code> 看停在哪一步。嵌套 workflow 用 <code>suspendedStep.path</code>。resume label 指向 <code>foreach</code> 的某一轮时，上面有 <code>foreachIndex</code>。</p>
+      <figure>
+        <figcaption>从 storage 找回一次暂停，再恢复。</figcaption>
+        <pre>import { createWorkflowStateReader } from '@mastra/core/workflows'
+
+const state = await workflow.getWorkflowRunById('run-123')
+if (state?.status === 'suspended') {
+  const reader = createWorkflowStateReader(state)
+  const suspendedStep = reader.getSuspendedStep()
+  const approvalLabel = reader.getResumeLabel('approve')
+  const run = await workflow.createRun({ runId: state.runId })
+  await run.resume({
+    step: approvalLabel?.stepId ?? suspendedStep?.path,
+    resumeData: { approved: true },
+    forEachIndex: approvalLabel?.foreachIndex,
+  })
+}</pre>
+      </figure>
+      <div class="note">
+        <p>同一时刻只有一个 <code>resume()</code> 能继续这次暂停。它先把存下来的状态从 <code>suspended</code> 改成 <code>running</code>。另一个调用会抛 <code>WORKFLOW_RESUME_ALREADY_CLAIMED</code>，step 不会再跑。HTTP 上后到的那次返回 <code>409 Conflict</code>。支持原子更新的 storage 才会强制执行。文档点名做不到的有 ClickHouse、Cloudflare D1、Cloudflare KV、Cloudflare Durable Objects、LanceDB、Redis。<code>shouldPersistSnapshot</code> 把 <code>running</code> 排除掉时，这次认领也会跳过。</p>
+      </div>
+      <p><code>.sleep(毫秒)</code> 和 <code>.sleepUntil(日期)</code> 停在 workflow 这一层，状态是 <code>waiting</code>。<code>suspend()</code> 停在某一个 step 里面，状态是 <code>suspended</code>。<code>Run</code> 参考页还把 <code>waiting</code> 写成：执行在结束前被打断，例如 executor 被 abort。两页都写了 <code>waiting</code>，触发原因不完全相同。</p>
+      <p class="src">依据：docs/src/content/en/docs/workflows/suspend-and-resume.mdx；docs/src/content/en/docs/workflows/snapshots.mdx；docs/src/content/en/reference/workflows/run-methods/resume.mdx；docs/src/content/en/reference/workflows/run.mdx。</p>
+
+      <h3 id="wf-hitl">Workflow 人审</h3>
+      <p>人审是 suspend 的一种用法。停下来是为了等人批、拒，或补数据。<code>suspend({ reason })</code> 把原因交给界面。人提交后调用 <code>resume({ resumeData })</code>。</p>
+      <p>人明确拒绝时用 <code>bail()</code>。<code>bail()</code> 后面的逻辑不跑。它不抛错。文档写 workflow 以 <code>success</code> 结束，结果是传给 <code>bail()</code> 的 payload。</p>
+      <p><code>Run</code> 参考页把 <code>bailed</code> 写成：某一步调用了 <code>bail()</code>，run 本身以 <code>success</code> 结束。默认引擎在返回前把内部的 <code>bailed</code> 改成 <code>success</code>（<code>packages/core/src/workflows/default.ts</code>）。step 处理函数里先记的是 <code>status: 'bailed'</code>（<code>packages/core/src/workflows/handlers/step.ts</code>）。类型 <code>WorkflowRunStatus</code> 里仍有 <code>bailed</code>。</p>
+      <div class="note">
+        <p>第一次进入时 <code>approved</code> 是空的，<code>!approved</code> 为真，所以会暂停。人传 <code>approved: false</code> 时，这个条件仍然为真，还会再暂停。拒绝要单独写成 <code>approved === false</code>，然后 <code>bail()</code>。文档里的顺序是：先处理 <code>false</code> 并 <code>bail()</code>，再处理「还没有答复」并 <code>suspend()</code>，最后才做真正的动作。</p>
+      </div>
+      <p>多步审批时，每一步有自己的 <code>resumeSchema</code> 和 <code>suspendSchema</code>。每一步要单独 <code>resume()</code> 一次，按顺序来。</p>
+      <p class="src">依据：docs/src/content/en/docs/workflows/human-in-the-loop.mdx；docs/src/content/en/docs/workflows/error-handling.mdx；docs/src/content/en/reference/workflows/run.mdx；packages/core/src/workflows/default.ts；packages/core/src/workflows/handlers/step.ts。</p>
+
+      <h3 id="agent-hitl">Agent 人审</h3>
+      <p>Agent 停的是一次 tool call。文档写了两种机制。都要用 snapshot。Mastra 上要配 storage，否则会看到 <code>snapshot not found</code>。Agent 的 snapshot 只留恢复这次 run 所需的数据，run 结束后就删。对话历史看 Memory。执行记录看 tracing。</p>
+      <p><strong>执行前审批。</strong>模型已经选好工具和参数，<code>execute</code> 还没跑。两个开关是「或」。任意一个为真，这次调用就停。短说明和 Workspace 那一层开关见上面的 <a href="#approval">审批</a>。</p>
+      <table>
+        <thead><tr><th>开关</th><th>放在哪</th><th>拦住谁</th></tr></thead>
+        <tbody>
+          <tr><td><code>requireApproval: true</code></td><td><code>createTool()</code></td><td>只拦这个工具</td></tr>
+          <tr><td><code>requireToolApproval: true</code></td><td>这次 <code>stream()</code> 或 <code>generate()</code></td><td>这次里的每个工具</td></tr>
+        </tbody>
+      </table>
+      <p><code>requireToolApproval</code> 也可以是函数。它能看到 <code>toolName</code>、模型传入的 <code>args</code>、<code>requestContext</code>、<code>workspace</code>。返回 <code>true</code> 才暂停。函数可以是 async。文档示例用 <code>Classifier</code> 判断，并且只把参数名交给决策模型。函数抛错时，默认改成要审批。返回 <code>true</code> 只是交给人批，不会自动批准或拒绝。</p>
+      <p>运行时再把函数结果和工具自己的 <code>requireApproval</code> 合在一起。工具上的布尔 <code>true</code> 一定要批。工具上的布尔 <code>false</code> 关不掉调用级的 <code>requireToolApproval</code>。工具上的 <code>requireApproval</code> 如果是函数，就以这个函数为准。</p>
+      <p>Durable agent 和 stored agent 会把选项存下来。函数存不了。这两个场景只能传布尔值。传了函数，就变成每个工具都要批。</p>
+      <p><code>stream()</code> 的 <code>fullStream</code> 里出现 <code>tool-call-approval</code>。<code>chunk.payload</code> 有 <code>toolCallId</code>、<code>toolName</code>、<code>args</code>。然后调用 <code>approveToolCall({ runId, toolCallId })</code> 或 <code>declineToolCall({ runId, toolCallId, reason })</code>。</p>
+      <p><code>reason</code> 会代替工具结果交给模型，也会写进这次 tool call 的 <code>approval</code> metadata。不写 <code>reason</code> 时，模型收到 <code>Tool call was not approved by the user</code>。<code>declineToolCallGenerate()</code> 和 <code>declineNetworkToolCall()</code> 同样可以带 <code>reason</code>。</p>
+      <p><code>generate()</code> 不流式。工具要批时，它马上返回。<code>finishReason</code> 是 <code>suspended</code>。<code>suspendPayload</code> 里有 <code>toolCallId</code>、<code>toolName</code>、<code>args</code>。还有 <code>runId</code>。继续用 <code>approveToolCallGenerate()</code> 或 <code>declineToolCallGenerate()</code>。</p>
+      <table>
+        <thead><tr><th></th><th><code>stream()</code></th><th><code>generate()</code></th></tr></thead>
+        <tbody>
+          <tr><td>怎么发现要批</td><td>chunk 类型 <code>tool-call-approval</code></td><td><code>finishReason: 'suspended'</code></td></tr>
+          <tr><td>批准</td><td><code>approveToolCall({ runId })</code></td><td><code>approveToolCallGenerate({ runId, toolCallId })</code></td></tr>
+          <tr><td>拒绝</td><td><code>declineToolCall({ runId })</code></td><td><code>declineToolCallGenerate({ runId, toolCallId })</code></td></tr>
+          <tr><td>结果</td><td>一条新的 stream</td><td>完整输出对象</td></tr>
+        </tbody>
+      </table>
+      <p>四个方法上的 <code>toolCallId</code> 都可选。多个工具同时等着时要传。常见于 Supervisor。不传就恢复最近那一次。</p>
+      <p>敏感工具可以把批准绑到当时给人看的工具名和参数上。文档用 <code>beforeToolCall</code> hook。批准前对 <code>toolName</code> 和 <code>args</code> 做指纹。生产环境要用稳定 hash。批准时把指纹放进存储，hook 对上了才放行，并且只用一次。参数在批准后变了，旧批准不能用。生产里要把指纹按用户、run、tool call、策略版本存进持久存储。</p>
+      <p><strong>执行中暂停。</strong><code>execute</code> 已经开始，发现还缺数据或还要确认，就 <code>return await context.agent.suspend(payload)</code>。<code>suspendSchema</code> 规定你问用户什么。<code>resumeSchema</code> 规定用户回什么。流里是 <code>tool-call-suspended</code>。接着跑用 <code>resumeStream(resumeData, { runId })</code>。</p>
+      <div class="note">
+        <p><code>suspend()</code> 不抛错。<code>await suspend(...)</code> 后面的代码仍会先跑完，工具才真正停。所以要立刻 <code>return</code>。</p>
+      </div>
+      <p>子 Agent 跑不了没有 <code>execute</code> 的 client tool。工具既要一份结构化答复，又要在子 Agent 里跑时，用 <code>suspend()</code>。暂停会传到 Supervisor。</p>
+      <p>一次暂停或审批被清掉后，流里会有 <code>tool-call-resumed</code>，<code>toolCallId</code> 与原来相同。它出现在这次的 <code>tool-result</code> 之前。<code>payload.kind</code> 是 <code>suspension</code> 或 <code>approval</code>。只有真的清掉一次暂停或审批时才发出。<code>@mastra/ai-sdk</code> 里对应 <code>data-tool-call-suspended</code> 或 <code>data-tool-call-approval</code>，并带 <code>resumed: true</code>。用这个信号标问题已经答过。暂停来自子 Agent 时，委托调用的输出是子 Agent 的结果，不是用户刚交的答复。</p>
+      <p><strong>下一句话自动接着跑。</strong>在 <code>defaultOptions</code> 或这一次请求上设 <code>autoResumeSuspendedTools: true</code>。用户在同一条 thread 上发下一句时，Agent 按 <code>resumeSchema</code> 抽出 <code>resumeData</code>，再恢复工具。需要 Memory、同一条 thread 和同一个 resource，以及工具上的 <code>resumeSchema</code>。这不批准 <code>requireApproval</code>。那种工具一直停着，直到明确批准、拒绝，或 <code>resumeStream({ approved: boolean })</code>。<code>resumeStream()</code> 留给 webhook 和按钮。自动恢复留给对话。</p>
+      <p><strong>页面刷新或换机器。</strong>内存里的 <code>runId</code> 没了，就用 <code>listSuspendedRuns()</code>。它从 <code>@mastra/core@1.43.0</code> 开始有。查的是还停着的 agent run。</p>
+      <figure>
+        <figcaption><code>requiresApproval</code> 走批准或拒绝。否则用 <code>suspendPayload</code> 再 <code>resumeStream()</code>。</figcaption>
+        <pre>const { runs, total } = await agent.listSuspendedRuns({
+  threadId: 'thread-123',
+  resourceId: 'user-456',
+})
+const toolCall = runs[0]?.toolCalls[0]</pre>
+      </figure>
+      <p>可选过滤还有 <code>fromDate</code>、<code>toDate</code>。<code>page</code> 从 0 开始。<code>perPage</code> 和 <code>page</code> 一起传才分页。每个 run 有 <code>runId</code>、<code>status: 'suspended'</code>、可选的 <code>threadId</code> 和 <code>resourceId</code>、<code>suspendedAt</code>、<code>toolCalls</code>。审批暂停才有 <code>args</code>。<code>suspend()</code> 暂停才有 <code>suspendPayload</code>。</p>
+      <p>结果只包含你调用方法的那个 Agent。Supervisor 看得到自己的外层 run。子 Agent 的内层 run 只有在子 Agent 上查才看得到。Snapshot 只在 run 还等输入时保留，run 结束后就删。<code>@mastra/pg</code> 和 <code>@mastra/libsql</code> 在数据库里按 thread 和 resource 过滤。其它 storage 先取出，再在进程里滤。HTTP 是 <code>GET /agents/:agentId/suspended-runs</code>。client SDK 同名方法也能查。<code>sendToolApproval()</code> 在 Memory 里找不到活跃 run 时，会先到 storage 里找。同一条 thread 配上多个暂停 run 时，要传 <code>toolCallId</code>。</p>
+      <p>默认的内存 storage 在进程退出后丢掉 snapshot。要跨重启，就配持久 storage。</p>
+      <p><strong>Supervisor。</strong>子 Agent 的工具要 <code>requireApproval</code>，或在 <code>execute</code> 里 <code>suspend()</code>，请求会传到最外层。多层委托也一样。你在 Supervisor 的流上批、拒，或 <code>resumeStream()</code>。决定再传回子 Agent。<code>generate()</code> 时看 <code>finishReason === 'suspended'</code>，然后 <code>approveToolCallGenerate({ runId, toolCallId })</code>。</p>
+      <p class="src">依据：docs/src/content/en/docs/agents/human-in-the-loop.mdx；docs/src/content/en/reference/agents/listSuspendedRuns.mdx。</p>
+
+      <h3 id="versions">版本差异</h3>
+      <p>这次只重读了各包 <code>package.json</code>、<code>@mastra/core</code> 1.79.0 changelog 开头、<code>@mastra/react</code> 1.12.0 changelog 开头、<code>@mastra/mcp</code> 2.5.0 changelog 开头，以及 MCP 文档。前面各节没有逐段重核。Node 版本三处写法仍在：部署页和 <code>create-mastra</code> 写 <code>v22.13.0</code>，<code>DEVELOPMENT.md</code> 写 Node 22 需 <code>v22.19.0</code> 或 <code>v24.11.0</code>，quickstart 写 Node.js 22.18.0 起可以直接跑 TypeScript。</p>
+      <table>
+        <thead><tr><th>包</th><th>上一轮</th><th>现在</th></tr></thead>
+        <tbody>
+          <tr><td><code>@mastra/core</code></td><td>1.79.0-alpha.6</td><td>1.79.0</td></tr>
+          <tr><td><code>mastra</code> CLI / <code>create-mastra</code></td><td>1.35.0-alpha.6</td><td>1.35.0</td></tr>
+          <tr><td><code>@mastra/client-js</code></td><td>1.56.0-alpha.6</td><td>1.56.0</td></tr>
+          <tr><td><code>@mastra/react</code></td><td>1.11.1-alpha.6</td><td>1.12.0</td></tr>
+          <tr><td><code>@mastra/ai-sdk</code></td><td>1.11.2-alpha.0</td><td>1.11.2</td></tr>
+          <tr><td><code>@mastra/server</code></td><td>1.79.0-alpha.6</td><td>1.79.0</td></tr>
+          <tr><td><code>@mastra/memory</code></td><td>1.39.0-alpha.5</td><td>1.39.0</td></tr>
+          <tr><td><code>@mastra/mcp</code></td><td>上一轮没抄版本</td><td>2.5.0</td></tr>
+        </tbody>
+      </table>
+      <p>除 React 和 MCP 外，其余包是同一条版本去掉 <code>-alpha</code>。license 字段这次都是 Apache-2.0。</p>
+      <p><code>@mastra/core</code> 1.79.0 的 breaking change 在 Agent controller。会话按 <code>sessionId</code> 找。一个 <code>resourceId</code> 下可以有多个 session。<code>resourceId</code> 只表示这组 thread 和 memory 属于谁。删了 <code>getSessionByResource(resourceId, scope)</code> 和 <code>createSession()</code> 的 <code>scope</code>。新增 <code>getSession(sessionId)</code>。不传 <code>id</code> 时，<code>id</code> 默认等于 <code>resourceId</code>。显式 <code>resourceId</code> 和这个 id 上已有 session 不一致时，<code>createSession</code> 会抛错。前面的笔记没写这些 API，所以旧句子不用改。</p>
+      <p>同一版还加了 trace 按根 span 的 <code>entityId</code> 聚合，以及 storage 的 <code>aggregateSpans()</code>。<code>DurableAgent.observe(runId)</code> 跨进程时，agent id 必须和启动这次 run 的 agent 相同，否则抛 <code>DURABLE_AGENT_OBSERVE_AGENT_MISMATCH</code>。</p>
+      <p><code>@mastra/react</code> 1.12.0 没有改掉前面写的 <code>MastraReactProvider</code> 和 <code>useChat()</code>。它新增了 <code>useExperimentsListMetrics</code>、<code>useDatasetsByIds</code>、trace 列表的 <code>useTraceQueryLatest</code>，以及 <code>useChat()</code> 的 <code>initialHistoryPagination</code>。</p>
+      <p class="src">依据：各包 package.json；packages/core/CHANGELOG.md「1.79.0」；client-sdks/react/CHANGELOG.md「1.12.0」。</p>
+
+      <h3 id="mcp">接 MCP</h3>
+      <p>包是 <code>@mastra/mcp</code> 2.5.0。<code>MCPClient</code> 去连别人的 MCP server。<code>MCPServer</code> 把 Mastra 的 agent、tool、workflow、prompt、resource 暴露给别的 MCP 客户端。传输是 stdio 和 Streamable HTTP。</p>
+      <p>2.0 起，你自己的 server 只提供修订 <code>2026-07-28</code>。不再协商更旧的修订。每个请求自己带齐状态。<code>initialize</code> 握手、session header、单独的 HTTP+SSE 传输，以及 server 主动发起的请求都去掉了。Streamable HTTP 的响应仍然可以是 SSE。去掉的是独立的 <code>GET /sse</code> 加 <code>POST /messages</code>。2.0 server 上这两条路径返回 404。客户端应打 <code>/mcp</code>。</p>
+      <p>Client 自己讲 <code>2026-07-28</code>。不写 <code>protocolVersion</code> 时，它先用 <code>server/discover</code> 问对方，对方没升级就退回升级前的 <code>initialize</code> 握手。一个 <code>MCPClient</code> 可以同时连新 server 和第三方旧 server。旧修订没有的能力会直接报错，包括 <code>resources.subscribe()</code> 和嵌入的 input request。<code>tools/list</code>、<code>tools/call</code>、<code>resources/read</code>、<code>prompts/get</code> 在旧连接上仍可用。要跳过探测，就写 <code>protocolVersion: '2026-07-28'</code> 或 <code>'legacy'</code>。谈成的修订由 <code>getServerProtocolVersions()</code> 读出。</p>
+      <p>还要给 2026 年以前的客户端提供服务时，server 留在 <code>@mastra/mcp</code> 1.x。文档写 1.x 仍可配合当前 <code>@mastra/core</code>。同一个 Mastra 实例可以同时注册 1.x 和 2.x server。2.0 server 的 <code>mcpVersion</code> 是 <code>2</code>。2.0 要求 <code>@mastra/core</code> 1.76 或更高的 1.x。</p>
+      <table>
+        <thead><tr><th>1.x</th><th>2.x</th></tr></thead>
+        <tbody>
+          <tr><td><code>context.mcp.elicitation.sendRequest()</code></td><td>工具里 <code>context.suspend(payload)</code>，再跑时读 <code>context.resumeData</code></td></tr>
+          <tr><td><code>mcp.elicitation.onRequest()</code></td><td>每个 server 配置上的 <code>inputRequests</code></td></tr>
+          <tr><td><code>protocolVersion: 'auto'</code></td><td>省略则探测；或写 <code>'2026-07-28'</code> / <code>'legacy'</code></td></tr>
+          <tr><td>server 上的 <code>protocolVersion</code></td><td>删掉。常量是 <code>MCP_PROTOCOL_VERSION</code></td></tr>
+          <tr><td><code>startSSE</code>、<code>/sse</code></td><td><code>startHTTP</code> 和 <code>/mcp</code></td></tr>
+          <tr><td><code>sessionId</code>、<code>serverless</code></td><td>请求无会话，删掉</td></tr>
+          <tr><td>运行时动态注册 OAuth client</td><td><code>clientInformation</code> 或 <code>clientMetadataUrl</code></td></tr>
+          <tr><td><code>roots</code>、<code>sampling</code></td><td>不再声明，也不再请求</td></tr>
+          <tr><td><code>logging/setLevel</code></td><td>每个请求用 metadata <code>io.modelcontextprotocol/logLevel</code></td></tr>
+        </tbody>
+      </table>
+      <p><code>new MCPClient({ id, servers, timeout, clientInfo, webhook })</code>。<code>timeout</code> 默认 60000 毫秒。<code>servers</code> 里有 <code>command</code> 就走 stdio，有 <code>url</code> 就走 Streamable HTTP。</p>
+      <figure>
+        <figcaption>静态工具放进 Agent。按请求的凭证用 <code>listToolsets()</code>，用完 <code>disconnect()</code>。</figcaption>
+        <pre>const mcpClient = new MCPClient({
+  id: 'my-mcp-client',
+  servers: {
+    wikipedia: { command: 'npx', args: ['-y', 'wikipedia-mcp'] },
+    weather: {
+      url: new URL('https://weather.example.com/mcp'),
+      requestInit: { headers: { Authorization: `Bearer ${process.env.WEATHER_API_KEY}` } },
+    },
+  },
+})
+const assistant = new Agent({
+  id: 'assistant',
+  name: 'Assistant',
+  model, // 用 models 页里的 provider/model
+  tools: await mcpClient.listTools(),
+})</pre>
+      </figure>
+      <table>
+        <thead><tr><th></th><th>静态</th><th>按请求</th></tr></thead>
+        <tbody>
+          <tr><td>方法</td><td><code>listTools()</code></td><td><code>listToolsets()</code></td></tr>
+          <tr><td>适合</td><td>所有请求共用同一套 server</td><td>每个用户或每个请求的凭证不同</td></tr>
+          <tr><td>交给 Agent</td><td>构造时的 <code>tools</code></td><td>这次 <code>generate()</code> 或 <code>stream()</code> 的 <code>toolsets</code></td></tr>
+        </tbody>
+      </table>
+      <p>同一个 client 上还有 <code>listToolsWithErrors</code>、<code>listToolDefinitions</code>、<code>toolFromDefinition</code>、<code>getServerInstructions</code>、<code>getServerInfo</code>、<code>authenticate</code>、<code>disconnect</code>、<code>toMCPServerProxies</code>。资源在 <code>resources</code>，prompt 在 <code>prompts</code>，进度在 <code>progress</code>，实验性事件在 <code>events</code>。</p>
+      <p>某个 server 上可以设 <code>requireToolApproval: true</code>，或传函数。函数能看到工具名、参数、request context，以及 server 广告的 annotation。不受你控制的 server，这些 annotation 只是不可信提示。这套批准走已有的 human-in-the-loop。</p>
+      <ul>
+        <li>stdio 子进程默认只继承 MCP SDK 的一小份环境变量，例如 POSIX 上的 <code>PATH</code>、<code>HOME</code>。<code>inheritDefaultEnv: false</code> 后，只传 <code>env</code> 里的变量。</li>
+        <li>HTTP 地址来自不可信配置时，设 <code>allowedHosts</code>。自定义 <code>fetch</code> 的重定向策略要你自己做。</li>
+        <li>工具返回的内容是给模型的不可信输入。用 processor 检查，用 <code>requireToolApproval</code> 拦住敏感工具。</li>
+        <li><code>forwardInstructions</code> 默认 <code>false</code>。打开后，会把 server 广告的 instructions 追加到 Agent 的 system prompt。默认最多 512 个字符。</li>
+        <li><code>onToolError</code> 默认 <code>'throw'</code>。2.5.0 起，<code>'return'</code> 给出完整的 <code>CallToolResult</code>，不再只给 <code>structuredContent</code>。</li>
+      </ul>
+      <p>文档点名的来源：Klavis AI、mcp.run、Composio、Smithery、Apify、Ampersand。签名 URL 和 token 放环境变量。</p>
+      <p>OAuth 用 <code>authenticate()</code> 走浏览器授权。<code>MCPOAuthClientProvider</code> 不再在运行时注册 client。必须给 <code>clientInformation</code> 或 <code>clientMetadataUrl</code>。交互式 <code>authenticate()</code> 用本机 loopback 回调。它不是给多用户托管登录用的。token 按授权服务器的 <code>issuer</code> 存。Mastra 平台上的 Connect 可以替 Neon、Canva 这类托管 server 管 OAuth。那是平台能力，不是这个包的必选项。</p>
+      <p class="src">依据：docs/src/content/en/docs/connections/mcp.mdx；docs/src/content/en/reference/migrations/mcp-v2.mdx；docs/src/content/en/reference/tools/mcp-client.mdx；docs/src/content/en/docs/guides/mcp-authentication-authorization.mdx；packages/mcp/CHANGELOG.md「2.5.0」。</p>
+
+      <h3 id="mcp-server">暴露 MCP</h3>
+      <figure>
+        <figcaption>挂到 Mastra 后，地址是 <code>/api/mcp/:serverId/mcp</code>。</figcaption>
+        <pre>export const mcpServer = new MCPServer({
+  id: 'my-mcp-server',
+  name: 'My MCP Server',
+  version: '1.0.0',
+  agents: { assistant },
+  tools: { weatherTool },
+  workflows: { weatherWorkflow },
+})
+
+export const mastra = new Mastra({ mcpServers: { mcpServer } })</pre>
+      </figure>
+      <p><code>id</code> 必填。注册后可以用 <code>getMCPServerById()</code> 拿回来。参考示例里，agent 会变成工具 <code>ask_myAgent</code>，workflow 会变成工具 <code>run_dataProcessingWorkflow</code>。只在本进程里用自己的 tool 和 agent 时，不必包一层 MCP server。</p>
+      <p>每个请求自包含，长驻进程和 serverless 用同一套。自己用 Node HTTP 时调用 <code>startHTTP({ url, httpPath, req, res, options })</code>。<code>options</code> 只剩 <code>enableDnsRebindingProtection</code>、<code>allowedHosts</code>、<code>allowedOrigins</code>。本地命令行用 <code>startStdio()</code>，再把构建产物写进包的 <code>bin</code>。</p>
+      <p>工具、resource、prompt 要向调用方要数据时，调用 <code>suspend()</code>，并声明 <code>resumeSchema</code>。server 把这一轮变成 <code>input_required</code>。调用方答完后，处理函数再跑一次，答案在 <code>resumeData</code> 里。<code>resumeSchema</code> 必须是一层普通字段。调用方拒绝或取消时，这次调用以错误结束，工具不会再跑。Client 在该 server 上写 <code>inputRequests</code>。不写的话，<code>input_required</code> 会变成错误。</p>
+      <div class="note">
+        <p>继续令牌是签名过的 <code>requestState</code>。它不是加密。被改过、过期，或属于别的工具、别的参数、别的调用方时，处理函数之前就拒绝。多台机器要能接着答，就用 <code>requestState: { key, ttlSeconds }</code> 共用一把 key。没有授权时，谁拿到这个字符串谁就能答，直到过期。会写数据、付钱、改账号的暂停，要放在授权后面。</p>
+      </div>
+      <p><code>server.executeTool()</code> 和 <code>POST /api/mcp/:serverId/tools/:toolId/execute</code> 做完时返回 <code>{ status: 'completed', output }</code>。等人填时返回 <code>{ status: 'suspended', suspendPayload, resumeSchema }</code>。接着做就把同一份参数再提交一次，带上 <code>resumeData</code> 和回传的 <code>suspendPayload</code>。</p>
+      <p>Studio 还会注册一组 REST 路由，用来列 server、看 tool、执行 tool、读 resource。默认前缀是 <code>/api</code>。鉴权靠 <code>server.auth</code>。只检查 <code>/mcp</code> 或 <code>/sse</code> 的中间件盖不住这些路由。配了 Mastra FGA 时，<code>tools/list</code> 会过滤，<code>tools/call</code> 和那条 REST execute 会检查执行权限。</p>
+      <p class="src">依据：docs/src/content/en/reference/tools/mcp-server.mdx；docs/src/content/en/reference/migrations/mcp-v2.mdx；docs/src/content/en/docs/guides/mcp-authentication-authorization.mdx。</p>
+
+      <h3 id="mcp-events">事件和 Apps</h3>
+      <p>MCP Apps 让工具通过 <code>ui://</code> resource 提供 HTML。Studio 在 tool 页和 agent 聊天里，用沙箱 iframe 渲染。给模型看短 <code>content</code>，给界面看 <code>structuredContent</code>。用 <code>mcp._meta.ui.resourceUri</code> 指到同一个 <code>ui://</code> URI。HTML 里用 <code>@modelcontextprotocol/ext-apps</code> 的 <code>App</code>。先注册 <code>ontoolinput</code>，再 <code>connect()</code>。iframe 里可以 <code>callServerTool()</code> 和 <code>sendMessage()</code>。</p>
+      <p>外部 server 自己实现了 Apps 时，用 <code>listTools()</code> 装工具，再用 <code>toMCPServerProxies()</code> 注册代理。Studio 用 <code>@mcp-ui/client</code> 加载 HTML。iframe 可以跑脚本、表单和弹窗。它碰不到父页面的 DOM、cookie 和 storage。</p>
+      <p>2.5.0 加了实验性事件，对应草案 SEP-3415。线格式和 API 以后可能改。Server 用 <code>defineEvent()</code> 声明，用 <code>server.events.emit()</code> 发出。<code>match</code> 按客户端选的参数过滤。<code>authorize</code> 返回 <code>false</code> 时，这次 poll 或订阅以 <code>-32024</code> 拒绝。没有 <code>poll</code> 函数的事件走推送，也从本进程内存缓冲里 poll。有 <code>poll</code> 函数的事件只能 poll。发出的事件只到达同一进程上的订阅者。事件类型列表变了，客户端要再调 <code>events.list()</code>。</p>
+      <figure>
+        <figcaption>投递顺序：配了 webhook 就用 webhook，否则 push，否则 poll。</figcaption>
+        <pre>const eventTypes = await mcp.events.list('tickets')
+const subscription = await mcp.events.subscribe(
+  'tickets',
+  'ticket.created',
+  { project: 'web' },
+)
+for await (const event of subscription) {
+  // event.data
+}</pre>
+      </figure>
+      <p>对方不广告 <code>io.modelcontextprotocol/events</code> 时，<code>list()</code> 的错误 id 是 <code>MCP_CLIENT_LIST_EVENTS_FAILED</code>，<code>subscribe()</code> 是 <code>MCP_CLIENT_SUBSCRIBE_EVENT_FAILED</code>，<code>error.cause.id</code> 是 <code>MCP_EVENTS_NOT_SUPPORTED</code>。</p>
+      <p>Webhook 要调用方已登录。回调必须是公网 <code>https</code>，先过验证挑战，每次投递都签名。Client 设 <code>webhook.url</code>，并挂 <code>mcp.events.handleWebhook()</code>。push 和 webhook 会缓冲还没读的事件。落后超过 <code>maxBufferedEvents</code>（默认 1000）时丢掉最旧的，报 <code>MCP_EVENTS_BUFFER_OVERFLOW</code>。不想自己写循环时，用 <code>MCPEventsSignalProvider</code> 把事件送进 Agent 的 thread。</p>
+      <p><code>MastraClient</code> 上对应的实验性方法是 <code>getMcpServerEvents</code>、<code>pollMcpServerEvent</code>、<code>streamMcpServerEvent</code>、<code>emitMcpServerEvent</code>。<code>emit</code> 的注释写明它在 <code>mastra dev</code> 下才有。</p>
+      <p class="src">依据：docs/src/content/en/docs/connections/mcp.mdx「Build MCP Apps」；docs/src/content/en/docs/guides/mcp-events.mdx；docs/src/content/en/reference/tools/mcp-client.mdx「events」；docs/src/content/en/reference/tools/mcp-server.mdx「Events」；packages/mcp/CHANGELOG.md「2.5.0」；client-sdks/client-js/src/client.ts。</p>
+
+      <h3 id="mcp-revs">协议修订史</h3>
+      <p>这一节只写 MCP 规范。不写这个仓库的类和方法。版本号是 <code>YYYY-MM-DD</code>，表示最近一次不兼容改动的日期。兼容改动不升版本。握手时代的版本说明写：一次会话必须谈成一个版本。<code>2026-07-28</code> 没有会话，版本写在每个请求上。</p>
+      <p>已发布修订有五个。前四个走 <code>initialize</code> 握手。只有 <code>2026-07-28</code> 走无状态信封。官方版本说明页抓取时仍把 current 写成 <code>2025-11-25</code>，那一页早于 7 月发布。现在的最新修订是 <code>2026-07-28</code>。</p>
+      <table>
+        <thead><tr><th>修订</th><th>规范自己写的大事</th></tr></thead>
+        <tbody>
+          <tr><td><code>2024-11-05</code></td><td>第一版。stdio，以及后来被替换的 HTTP+SSE。<code>GET /sse</code> 长连接，消息另走 <code>POST /messages</code>。下一版 changelog 说明当时还没有 OAuth 2.1 框架、Streamable HTTP、JSON-RPC batching、tool annotations。</td></tr>
+          <tr><td><code>2025-03-26</code></td><td>用一个端点的 Streamable HTTP 替换 HTTP+SSE。加入 OAuth 2.1、JSON-RPC batching、tool annotations。进度通知加 <code>message</code>。内容加 audio。加 completions。会话用 <code>Mcp-Session-Id</code>，<code>GET</code> 收服务端消息，<code>Last-Event-ID</code> 续传。</td></tr>
+          <tr><td><code>2025-06-18</code></td><td>删掉刚加上的 batching。加 structured tool output、elicitation、resource link。MCP server 视为 OAuth Resource Server。客户端必须做 RFC 8707。HTTP 后续请求必须带 <code>MCP-Protocol-Version</code>。Lifecycle Operation 从 SHOULD 改成 MUST。传输形状不变。</td></tr>
+          <tr><td><code>2025-11-25</code></td><td>仍要握手。加 OIDC Discovery、图标、URL elicitation、<code>notifications/elicitation/complete</code>、sampling 的 tool calling、实验性 tasks。推荐 Client ID Metadata Documents。SSE 允许服务端主动断开后再续。JSON Schema 2020-12 成为默认方言。</td></tr>
+          <tr><td><code>2026-07-28</code></td><td>不兼容大改。去掉握手、会话、GET 流、SSE 续传。反问改成 <code>input_required</code>。Tasks 挪进扩展。Roots、Sampling、Logging 和 HTTP+SSE 标为 Deprecated。</td></tr>
+        </tbody>
+      </table>
+      <p><code>2026-07-28</code> 相对 <code>2025-11-25</code>，changelog 写的九件大事：</p>
+      <ol>
+        <li>去掉 <code>Mcp-Session-Id</code>。列表不再按连接变化。跨调用状态改成工具参数里的句柄。</li>
+        <li>去掉 <code>initialize</code> 和 <code>notifications/initialized</code>。每个请求的 <code>_meta</code> 带协议版本和客户端能力。版本不合返回 <code>UnsupportedProtocolVersionError</code>。</li>
+        <li>新增必须实现的 <code>server/discover</code>。</li>
+        <li>去掉 HTTP <code>GET</code>，以及 <code>resources/subscribe</code>、<code>resources/unsubscribe</code>。改成 <code>subscriptions/listen</code>。</li>
+        <li>去掉 <code>ping</code>、<code>logging/setLevel</code>、<code>notifications/roots/list_changed</code>。日志级别改到每次请求的 <code>io.modelcontextprotocol/logLevel</code>。</li>
+        <li>Tasks 移出核心，进入 <code>io.modelcontextprotocol/tasks</code>。用 <code>tasks/get</code> 轮询，加 <code>tasks/update</code>。</li>
+        <li>服务端不再在流上发 <code>elicitation/create</code>、<code>sampling/createMessage</code>、<code>roots/list</code>。结果用 <code>resultType: "input_required"</code>。</li>
+        <li>每个结果都有 <code>resultType</code>。更早服务端缺这个字段时，新客户端必须当成 <code>complete</code>。</li>
+        <li>去掉 <code>Last-Event-ID</code>。断了的请求用新 id 再发。</li>
+      </ol>
+      <p>同一版还要求 <code>POST</code> 带 <code>Mcp-Method</code> 和 <code>Mcp-Name</code>。列表结果带 <code>ttlMs</code> 和 <code>cacheScope</code>。授权响应里的 <code>iss</code> 必须核对。动态客户端注册标为 Deprecated。删掉 <code>notifications/elicitation/complete</code> 和 <code>elicitationId</code>，没有十二个月过渡。只支持这一修订的端点，对 <code>GET</code> 或 <code>DELETE</code> 应回 <code>405</code>。</p>
+      <figure>
+        <figcaption>官方博文给出的 2026-07-28 请求形状。changelog 还要求 _meta 带协议版本和客户端能力。</figcaption>
+        <pre>POST /mcp HTTP/1.1
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: tools/call
+Mcp-Name: search
+
+{"jsonrpc":"2.0","id":1,"method":"tools/call",
+ "params":{"name":"search","arguments":{"q":"otters"},
+ "_meta":{"io.modelcontextprotocol/clientInfo":{"name":"my-app","version":"1.0"}}}}</pre>
+      </figure>
+      <table>
+        <thead><tr><th>传输</th><th>出现</th><th>现在</th></tr></thead>
+        <tbody>
+          <tr><td>stdio</td><td><code>2024-11-05</code></td><td>仍在。本地子进程用。<code>2026-07-28</code> 的 stdio 同样去掉握手</td></tr>
+          <tr><td>HTTP+SSE</td><td><code>2024-11-05</code></td><td><code>2025-03-26</code> 起被替换。<code>2026-07-28</code> 标为 Deprecated</td></tr>
+          <tr><td>Streamable HTTP</td><td><code>2025-03-26</code></td><td>远程服务器的现行传输。<code>2025-06-18</code> 和 <code>2025-11-25</code> 没改端点形状。<code>2026-07-28</code> 去掉会话、GET 流和续传</td></tr>
+        </tbody>
+      </table>
+      <p class="src">依据：modelcontextprotocol.io 各修订 changelog（2025-03-26、2025-06-18、2025-11-25、2026-07-28）；2025-06-18 lifecycle 与 transports；2025-06-18 elicitation；2026-07-28 streamable-http；blog.modelcontextprotocol.io/posts/2026-07-28/；py.sdk.modelcontextprotocol.io 的 KNOWN_PROTOCOL_VERSIONS。二次说明 mcp.so 与 ChatForest 的传输时间线和规范一致，条目以规范页为准。</p>
+
+      <h3 id="mcp-diff">新旧协议</h3>
+      <p>上面是五次修订。这一节只把最后一次大改拆开：握手时代停在 <code>2025-11-25</code>，无状态时代从 <code>2026-07-28</code> 开始。下面的代码块是协议伪代码，不是这个仓库的类。</p>
+      <table>
+        <thead><tr><th>层</th><th>旧</th><th>新</th></tr></thead>
+        <tbody>
+          <tr><td>协议修订</td><td>到 <code>2025-11-25</code>。再往前还有 <code>2025-06-18</code>、<code>2025-03-26</code>、<code>2024-11-05</code></td><td><code>2026-07-28</code>。官方 changelog 写它替换的上一修订就是 <code>2025-11-25</code></td></tr>
+          <tr><td>HTTP 传输</td><td><code>2024-11-05</code> 用独立的 HTTP+SSE。<code>2025-03-26</code> 到 <code>2025-11-25</code> 用带会话的 Streamable HTTP</td><td>仍叫 Streamable HTTP。去掉会话、GET 流和断线续传</td></tr>
+          <tr><td>Mastra 包</td><td><code>@mastra/mcp</code> 1.x。server 可以协商旧修订</td><td><code>@mastra/mcp</code> 2.5.0。server 只讲 <code>2026-07-28</code></td></tr>
+        </tbody>
+      </table>
+      <p>旧修订先发 <code>initialize</code>，再发 <code>notifications/initialized</code>。Streamable HTTP 上，服务端可以用响应头 <code>Mcp-Session-Id</code> 记住这次连接。之后每个请求都带回这个头。结束会话用 <code>DELETE</code>。</p>
+      <p>新修订去掉握手和会话。每个请求自己带协议版本、客户端能力和身份。任意一台机器都可以答。应用自己的状态要做成工具参数里的句柄，不要藏在传输层会话里。</p>
+      <table>
+        <thead><tr><th>事项</th><th>到 2025-11-25</th><th>2026-07-28</th></tr></thead>
+        <tbody>
+          <tr><td>开场</td><td><code>initialize</code>，然后 <code>notifications/initialized</code></td><td>没有握手。可选先调 <code>server/discover</code></td></tr>
+          <tr><td>版本和能力</td><td>协商一次，留在会话上</td><td>每个请求的 <code>_meta</code>：<code>io.modelcontextprotocol/protocolVersion</code>、<code>clientCapabilities</code>。还应带 <code>clientInfo</code>。结果里应有 <code>serverInfo</code></td></tr>
+          <tr><td>HTTP 会话</td><td><code>Mcp-Session-Id</code>。<code>DELETE</code> 结束</td><td>去掉。<code>GET</code> 或 <code>DELETE</code> 打 MCP 端点应回 <code>405</code></td></tr>
+          <tr><td>服务端反过来问</td><td>SSE 上发 <code>elicitation/create</code>、<code>sampling/createMessage</code>、<code>roots/list</code></td><td>结果 <code>resultType: "input_required"</code> 加 <code>inputRequests</code>。客户端用新 id 重发原请求，带 <code>inputResponses</code>，并原样回传 <code>requestState</code></td></tr>
+          <tr><td>普通结果</td><td>可以不写 <code>resultType</code>。新客户端必须把这种旧结果当成 <code>complete</code></td><td>每个结果都有 <code>resultType</code></td></tr>
+          <tr><td>订阅</td><td><code>resources/subscribe</code>，以及 HTTP <code>GET</code> 的 SSE</td><td>一条长 <code>POST</code>：<code>subscriptions/listen</code></td></tr>
+          <tr><td>进度和日志</td><td>可以走单独的 GET 流</td><td>只走这次请求自己的响应流。没带 <code>logLevel</code> 就不得发 <code>notifications/message</code></td></tr>
+          <tr><td>断线</td><td><code>Last-Event-ID</code> 续同一条 SSE</td><td>续传去掉。用新的请求 id 再发一次</td></tr>
+          <tr><td>路由</td><td>解析 JSON body</td><td><code>POST</code> 必须带 <code>Mcp-Method</code>、<code>Mcp-Name</code></td></tr>
+          <tr><td>列表缓存</td><td>没有这组字段</td><td><code>ttlMs</code> 和 <code>cacheScope</code></td></tr>
+          <tr><td>Tasks</td><td><code>2025-11-25</code> 放在核心里，实验性</td><td>扩展 <code>io.modelcontextprotocol/tasks</code>。<code>tasks/get</code> 轮询，加 <code>tasks/update</code></td></tr>
+          <tr><td>Roots、Sampling、Logging</td><td>可用</td><td>Deprecated。至少十二个月。新实现不要再加</td></tr>
+          <tr><td>HTTP+SSE</td><td><code>2025-03-26</code> 起被替换，本修订再标 Deprecated</td><td>走现在的 Streamable HTTP</td></tr>
+          <tr><td>DCR</td><td>可用。<code>2025-11-25</code> 已推荐 CIMD</td><td>Deprecated。凭证按 <code>issuer</code> 分开存。响应里若有 <code>iss</code>，兑换 code 前必须核对</td></tr>
+        </tbody>
+      </table>
+      <p><code>2025-11-25</code> 相对 <code>2025-06-18</code> 加的是 OIDC Discovery、图标、URL elicitation、sampling 里的 tool calling、实验性 tasks，以及推荐 CIMD。那些仍属于握手时代。</p>
+      <p class="src">依据：modelcontextprotocol.io/specification/2026-07-28/changelog；specification/2025-11-25/changelog；blog.modelcontextprotocol.io/posts/2026-07-28/；specification/2026-07-28/basic/transports/streamable-http。</p>
+
+      <h3 id="mcp-old">旧协议伪代码</h3>
+      <p>这段是 <code>2025-03-26</code> 到 <code>2025-11-25</code> 的 Streamable HTTP。比这更早的 HTTP+SSE 用 <code>GET /sse</code> 拿消息地址，再 <code>POST /messages</code>。Mastra 2.0 不再提供那条传输。stdio 在旧修订里也先走 <code>initialize</code>，只是没有 <code>Mcp-Session-Id</code>。</p>
+      <figure>
+        <figcaption>旧客户端。会话一直留着。服务端在 SSE 上反过来要数据。</figcaption>
+        <pre>sessionId = null
+
+POST /mcp
+  body: { method: "initialize",
+          params: { protocolVersion: "2025-11-25",
+                    capabilities: { elicitation: {} },
+                    clientInfo } }
+读响应:
+  sessionId = 响应头 Mcp-Session-Id
+
+POST /mcp
+  header: Mcp-Session-Id: sessionId
+  body: { method: "notifications/initialized" }
+
+GET /mcp
+  header: Mcp-Session-Id: sessionId
+  Accept: text/event-stream
+流断了:
+  GET /mcp
+    header: Last-Event-ID: 上次的事件 id
+
+POST /mcp
+  header: Mcp-Session-Id: sessionId
+  body: { id: 1, method: "tools/call", params: { name, arguments } }
+这条调用先不结束
+SSE 上收到:
+  { id: 9, method: "elicitation/create", params: { message, requestedSchema } }
+问用户
+POST /mcp
+  body: { id: 9, result: { action: "accept", content } }
+原来的 id 1 才返回工具结果
+
+DELETE /mcp
+  header: Mcp-Session-Id: sessionId</pre>
+      </figure>
+
+      <h3 id="mcp-new">新协议伪代码</h3>
+      <figure>
+        <figcaption>新客户端。每次请求自带版本和能力。要数据就结束这一轮，再重发。</figcaption>
+        <pre>可选:
+  POST /mcp
+    header: MCP-Protocol-Version: 2026-07-28
+    header: Mcp-Method: server/discover
+  对方没有这个方法: 退回旧 initialize。这是探测，不是必经步骤
+
+POST /mcp
+  header: MCP-Protocol-Version: 2026-07-28
+  header: Mcp-Method: tools/call
+  header: Mcp-Name: bookDelivery
+  body.params._meta:
+    io.modelcontextprotocol/protocolVersion = "2026-07-28"
+    io.modelcontextprotocol/clientCapabilities
+    io.modelcontextprotocol/clientInfo
+
+resultType == "complete":
+  使用结果
+resultType == "input_required":
+  按 inputRequests 问用户
+  requestState 一个字节都不要改
+  POST 同一方法，JSON-RPC id 用新的
+    带上原来的 arguments、inputResponses、requestState
+
+列表变化:
+  POST subscriptions/listen
+  响应是一条长流
+
+响应流断了:
+  不要用 Last-Event-ID
+  用新的请求 id 再发一次
+
+不要带 Mcp-Session-Id
+不要 GET 或 DELETE 这个端点来维持会话</pre>
+      </figure>
+      <p>进度和日志只出现在这次 <code>POST</code> 的响应流上。想要日志，<code>_meta</code> 里带 <code>io.modelcontextprotocol/logLevel</code>。服务端要跨调用记住进度时，自己发一个句柄，让模型把它放进下一次工具参数。</p>
+
+      <h3 id="mcp-impl">Mastra 1.x / 2.x</h3>
+      <p>同一件事：工具执行到一半，要用户补一个地址。1.x 把连接留着，用 elicitation 在这条请求里等答案。2.x 结束这一轮 HTTP，发 <code>input_required</code>。用户答完后，工具函数再跑一遍。</p>
+      <figure>
+        <figcaption>伪代码。@mastra/mcp 1.x。请求保持打开。</figcaption>
+        <pre>server = new MCPServer({
+  protocolVersion: "2025-11-25" 或 "auto",
+  tools: {
+    bookDelivery.execute(args, context):
+      answer = await context.mcp.elicitation.sendRequest({
+        message: "Delivery address?",
+        requestedSchema: { address: string }
+      })
+      if answer.action != "accept": return { confirmed: false }
+      book(args.orderId, answer.content.address)
+      return { confirmed: true }
+  }
+})
+
+client = new MCPClient({
+  servers: {
+    booking: {
+      url: ".../sse 或 /mcp",
+      protocolVersion: "auto",
+      sessionId,
+      reconnectionOptions
+    }
+  }
+})
+mcp.elicitation.onRequest("booking", params =&gt; askUser(params))</pre>
+      </figure>
+      <figure>
+        <figcaption>伪代码。@mastra/mcp 2.x。地址是 /api/mcp/booking/mcp。</figcaption>
+        <pre>server = new MCPServer({
+  requestState: { key: env.MCP_REQUEST_STATE_KEY, ttlSeconds: 600 },
+  tools: {
+    bookDelivery:
+      suspendSchema: { phase: "address", message: string }
+      resumeSchema: { address: string }
+      execute(args, context):
+        if context.resumeData 为空:
+          context.suspend({ phase: "address", message: "Delivery address?" })
+          return
+        book(args.orderId, context.resumeData.address)
+        return { confirmed: true }
+  }
+})
+
+client = new MCPClient({
+  servers: {
+    booking: {
+      url: ".../api/mcp/booking/mcp",
+      inputRequests: ({ key, params }) =&gt; askUser(key, params)
+    }
+  }
+})
+
+result = executeTool("bookDelivery", { orderId })
+if result.status == "suspended":
+  answer = askUser(result.suspendPayload, result.resumeSchema)
+  executeTool("bookDelivery", { orderId }, {
+    resumeData: answer,
+    suspendPayload: result.suspendPayload
+  })</pre>
+      </figure>
+      <table>
+        <thead><tr><th>行为</th><th>1.x</th><th>2.x</th></tr></thead>
+        <tbody>
+          <tr><td>服务端讲哪些修订</td><td><code>2025-11-25</code>、<code>2026-07-28</code> 或 <code>auto</code></td><td>只讲 <code>2026-07-28</code>。旧客户端不会被降级接受</td></tr>
+          <tr><td>客户端 <code>protocolVersion</code></td><td><code>2025-11-25</code>、<code>2026-07-28</code>、<code>auto</code></td><td>省略则探测。可钉 <code>2026-07-28</code> 或 <code>legacy</code></td></tr>
+          <tr><td>向用户要数据</td><td><code>elicitation.sendRequest</code>，请求保持打开</td><td><code>suspend</code> / <code>resumeData</code></td></tr>
+          <tr><td>OAuth 客户端</td><td>可以运行时动态注册</td><td><code>clientInformation</code> 或 <code>clientMetadataUrl</code>。不打 <code>registration_endpoint</code></td></tr>
+          <tr><td>日志级别</td><td><code>logging/setLevel</code>，按连接记住</td><td>每个请求自己带。下一轮要再带</td></tr>
+          <tr><td>资源订阅</td><td>旧的 <code>resources/subscribe</code></td><td>方法名还在，底下走 <code>subscriptions/listen</code></td></tr>
+          <tr><td>roots、sampling</td><td>客户端会广告，服务端会请求</td><td>两边都去掉。嵌在 <code>input_required</code> 里会失败</td></tr>
+          <tr><td>stdio</td><td>按选定修订说话</td><td>2.0 server 拒绝旧的 stdio 开场</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        <p><code>requestState</code> 由服务端签名。改过、过期，或工具、参数、调用方对不上，处理函数不会跑。不配 <code>key</code> 时，只能在原进程上继续。payload 是签名，不是加密。没有授权时，谁拿到这个字符串谁就能答，直到 <code>ttlSeconds</code> 到期。Client 不写 <code>inputRequests</code> 时，<code>input_required</code> 变成错误。</p>
+      </div>
+      <p>2.x 客户端仍能连旧 server。<code>tools/list</code>、<code>tools/call</code>、<code>resources/read</code>、<code>prompts/get</code> 可用。订阅和嵌入的 input request 在旧连接上会报错。<code>getServerProtocolVersions()</code> 能读出谈成的修订。还要服务 2026 年以前的客户端时，server 留在 1.x。同一个 Mastra 实例可以同时注册 1.x 和 2.x。2.0 对象的 <code>mcpVersion</code> 是 <code>2</code>。</p>
+      <p class="src">依据：docs/src/content/en/reference/migrations/mcp-v2.mdx；packages/mcp/src/server/types.ts 的 MCP_PROTOCOL_VERSION；packages/mcp/src/client/types.ts 的 MCP_CLIENT_PROTOCOL_VERSION；上面四份协议页。</p>
+
+      <h3 id="java">接 Java</h3>
+      <p>下面这批小节（接 Java 到架构图索引）来自另一轮问答笔记。核对基线是 commit <code>846639e853</code>，行号会随版本漂移。</p>
+      <p>外部服务（例如 Java 后端）调用 agent，三条路。普通业务调用用 HTTP。调用方自己也有 LLM 编排、想把 agent 当一个 tool，用 MCP。两边都是 agent 框架，用 A2A。</p>
+      <table>
+        <thead><tr><th>方式</th><th>入口</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>HTTP JSON API</td><td><code>POST /api/agents/:id/generate</code>（非流式）、<code>/stream</code>（SSE）</td><td>定义在 handlers/agents.ts:1473、:1873。<code>threadId</code> 保持跨请求记忆。机器可读清单：<code>GET /api/system/api-schema</code>；配 <code>openapiPath</code> 出 OpenAPI 文档，可生成 Java client。</td></tr>
+          <tr><td>MCP</td><td><code>/api/mcp/:serverId/mcp</code>（streamable HTTP）</td><td>Agent 没有直接的 asTool。用 <code>createTool</code> 包一层 <code>agent.generate</code>，注册到 <code>MCPServer</code>。Java 侧用官方 MCP Java SDK 的 streamable HTTP transport。</td></tr>
+          <tr><td>A2A</td><td><code>/.well-known/:agentId/agent-card.json</code> + <code>/a2a/:agentId</code></td><td>agent card、task 模型、push notification。handlers/a2a.ts。</td></tr>
+        </tbody>
+      </table>
+      <figure>
+        <figcaption>JDK 11+ 自带 HttpClient。Jackson 反序列化响应</figcaption>
+        <pre>HttpRequest req = HttpRequest.newBuilder()
+    .uri(URI.create("https://your-mastra/api/agents/myAgent/generate"))
+    .header("Authorization", "Bearer &lt;token&gt;")
+    .header("Content-Type", "application/json")
+    .POST(HttpRequest.BodyPublishers.ofString("""
+        {"messages":[{"role":"user","content":"帮我查下订单状态"}]}""", UTF_8))
+    .build();
+HttpResponse&lt;String&gt; resp = client.send(req, BodyHandlers.ofString());</pre>
+      </figure>
+      <p class="src">依据：packages/server/src/server/handlers/agents.ts:1473、:1873；handlers/mcp.ts:682；handlers/a2a.ts；client-sdks/client-js/src/resources/agent.ts:2800。</p>
+
+      <h3 id="endpoints">端点与屏蔽</h3>
+      <p>内置路由默认挂 <code>/api</code> 前缀（server-adapter/index.ts:439）。当前约 380 条路由、60 个资源组：agents 40、workflows 27、memory 26、mcp 14、observability 11、agent-controller 36、datasets 33、workspaces 21、tool-providers 13，其余是 stored/* 版本化 CRUD 和 a2a、auth、system。Java 集成最小集五条：</p>
+      <ul>
+        <li><code>POST /api/agents/:id/generate</code>、<code>POST /api/agents/:id/stream</code>：调用。</li>
+        <li><code>GET /api/memory/threads/:threadId/messages</code>：拉历史。</li>
+        <li><code>POST /api/agents/:id/approve-tool-call</code>：审批。</li>
+        <li><code>GET /api/agents</code>：服务发现。</li>
+      </ul>
+      <p>不想暴露某些 URL，五种方式，按层叠用：</p>
+      <ol>
+        <li><code>auth.rules</code> 白名单。规则按序匹配、第一条命中生效，全部不匹配默认拒绝（auth/helpers.ts:664）。字段：<code>path</code>（字符串/正则/数组）、<code>methods</code>、<code>condition(user)</code>、<code>allow</code>。</li>
+        <li>RBAC 权限收窄。路由按 path+method 派生权限（<code>GET /agents/:id</code> 得 <code>agents:read</code>，<code>POST .../generate</code> 得 <code>agents:execute</code>）。给外部 token 最小角色。</li>
+        <li><code>server.middleware</code>。Hono 签名，在路由前执行，对屏蔽路径直接回 404，比 403 隐形。</li>
+        <li>网关层。nginx 只转发白名单路径。唯一能物理不暴露的方式。</li>
+        <li>避坑。<code>public[]</code> 是放开认证不是屏蔽。认证不等于授权：不配 rules/RBAC 时，合法 token 能调全部路由。Studio 页面不走 /api 认证，生产用 <code>mastra build</code> 产物不带 Studio。</li>
+      </ol>
+      <figure>
+        <figcaption>rules 白名单：只放行两条端点，其余默认拒</figcaption>
+        <pre>rules: [
+  { path: /^\/api\/agents\/[\w-]+\/(generate|stream)$/, allow: true },
+  { condition: u =&gt; u.role === 'admin', allow: true },
+]</pre>
+      </figure>
+      <p class="src">依据：packages/server/src/server/server-adapter/index.ts:439；auth/helpers.ts:602-664；packages/_internals/auth/src/types/index.ts:92；handlers 目录路由清单。</p>
+
+      <h3 id="authz">按用户放行</h3>
+      <p>目标：用户 A 有 agent X 的权限，才放行对 X 的调用。先说限制：<code>rules.condition(user)</code> 只拿得到 user，拿不到路径。三个方案：</p>
+      <ul>
+        <li>方案一，rules 动态生成。权限在 <code>authenticateToken</code> 里塞进 user（<code>allowedAgents</code>），再按已知 agent 集合逐条生成 <code>{ path: '/api/agents/&lt;id&gt;', condition, allow: true }</code>。path 是前缀语义，子路径全覆盖。</li>
+        <li>方案二，<code>authorize(path, method, user, context)</code>（types/index.ts:87）。拿得到完整路径，运行时提取 agentId 查权限系统。agent 增删、权限变更不用重启。求值顺序 authorizeUser → authorize → rules，三取其一。</li>
+        <li>方案三，FGA provider（EE，server/types.ts:445）。原生「用户 × 资源 × 动作」：<code>check()</code>、<code>require()</code>、<code>filterAccessible()</code> 列表过滤、<code>resolveRouteFGA</code> 路由解析、<code>requireForProtectedRoutes</code> 默认全拒。接口在 ee/interfaces/fga.ts:311。</li>
+      </ul>
+      <p>rules 和 authorize 只挡单次请求，<code>GET /api/agents</code> 仍返回全量列表。要只看到有权的 agent，加一条自定义路由。自定义路由 <code>requiresAuth</code> 默认 true，自动走同一条 auth 链；handler 里 <code>c.get('mastra')</code> 拿容器（hono/src/index.ts:205）。</p>
+      <figure>
+        <figcaption>authorize 挡内置端点，apiRoutes 出过滤后的列表。两层共用一个权限函数</figcaption>
+        <pre>new Mastra({
+  agents: { salesAgent, supportAgent },
+  server: {
+    auth: {
+      authenticateToken: async ({ token }) =&gt; verifyJwt(token),
+      authorize: async (path, method, user) =&gt; {
+        const m = path.match(/^\/api\/(agents|stored\/agents)\/([^/]+)/);
+        if (m) return hasAgentPermission(user.id, m[2]);
+        if (path.startsWith('/api/my/')) return true;
+        return user.role === 'admin';
+      },
+    },
+    apiRoutes: [
+      {
+        method: 'GET', path: '/my/agents',
+        handler: async (c) =&gt; {
+          const mastra = c.get('mastra');
+          const user = verifyJwt(c.req.header('Authorization')!.slice(7));
+          const all = mastra.listAgents();
+          const withPerm = await Promise.all(
+            all.map(async a =&gt; [a, await hasAgentPermission(user.id, a.id)] as const),
+          );
+          return c.json(withPerm.filter(([, ok]) =&gt; ok).map(([a]) =&gt; ({
+            id: a.id, name: a.name, description: a.getDescription(),
+          })));
+        },
+      },
+    ],
+  },
+})</pre>
+      </figure>
+      <div class="note">
+        <p>三个注意：authorize 里要放行自定义路由自己的前缀。apiRoutes 有 prefix 冲突检查，用自有前缀。列表返回做字段裁剪，别把 instructions 全文泄给前端。</p>
+      </div>
+      <p class="src">依据：packages/_internals/auth/src/types/index.ts:87、ee/interfaces/fga.ts:311；packages/core/src/server/types.ts:445；server-adapters/hono/src/index.ts:205、:718。</p>
+
+      <h3 id="exec-sec">执行环境安全</h3>
+      <p>工具执行是最大的攻击面。先说部署：官方 deployer 没有 Docker target，但 server adapter 可以起 Node 进程装进自己的镜像。</p>
+      <figure>
+        <figcaption>两段式构建</figcaption>
+        <pre>FROM node:22-slim AS build
+WORKDIR /app
+COPY . .
+RUN corepack enable &amp;&amp; pnpm install &amp;&amp; pnpm mastra build
+
+FROM node:22-slim
+WORKDIR /app
+COPY --from=build /app/.mastra/output ./
+USER node
+CMD ["node", "index.js"]</pre>
+      </figure>
+      <table>
+        <thead><tr><th>内置机制</th><th>位置</th></tr></thead>
+        <tbody>
+          <tr><td>工具白名单：客户端 body 里的 <code>tools</code> 被剥掉，注入不了</td><td>handlers/agents.ts（sanitizeBody）</td></tr>
+          <tr><td>审批门 <code>needsApprovalFn</code></td><td>tools/tool.ts:273</td></tr>
+          <tr><td>scopes 授权传入工具执行</td><td>agent/scopes.ts</td></tr>
+          <tr><td>workspace 文件系统钉根内 + symlink 逃逸防护</td><td>workspace/filesystem/local-filesystem.ts</td></tr>
+          <tr><td>MCP 出站 allowedHosts 白名单 + 重定向最多 5 跳</td><td>mcp/client/url-policy.ts</td></tr>
+          <tr><td>code-mode 隔离：isolated-vm（无进程无网络）/ quickjs</td><td>code-mode/isolated-vm、quickjs</td></tr>
+          <tr><td>执行端点要 execute 级权限</td><td>handlers/tools.ts、mcp.ts</td></tr>
+        </tbody>
+      </table>
+      <p>「不执行危险命令」分四层。第 0 层不造洞：做成窄工具（<code>restartService(name: enum)</code>），不给通用 shell；跑模型生成的代码用 code-mode，别用 child_process。第 1 层工具内约束：</p>
+      <figure>
+        <figcaption>审批 + 黑名单 + 超时</figcaption>
+        <pre>const BLOCKED = /rm\s+-rf|sudo|curl.*\|\s*sh|mkfs|dd\s+if=/;
+
+const shell = createTool({
+  id: 'shell',
+  inputSchema: z.object({ cmd: z.string().max(200) }),
+  needsApprovalFn: ({ args }) =&gt; BLOCKED.test(args.cmd) || /\/etc|\/root/.test(args.cmd),
+  execute: async ({ args }, { abortSignal }) =&gt; {
+    if (BLOCKED.test(args.cmd)) throw new Error('blocked');
+    return execWithTimeout(args.cmd, { signal: abortSignal, timeout: 10_000 });
+  },
+});</pre>
+      </figure>
+      <figure>
+        <figcaption>第 2 层：编排与执行分开，执行容器最小权限</figcaption>
+        <pre>services:
+  agent-runtime:
+    build: .
+    ports: ["8080:8080"]
+  tool-executor:
+    build: ./executor
+    read_only: true
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    user: "1000:1000"
+    tmpfs: [/tmp]
+    network_mode: none
+    mem_limit: 512m
+    pids_limit: 64</pre>
+      </figure>
+      <p>第 3 层：HTTP 工具套 URL 白名单（照抄 url-policy 模式）；observability 的 trace 记录每次 tool call，事后可审计。三层各管一段：审批挡没批准的，schema 挡参数越界的，容器挡被注入干坏事的。</p>
+      <p class="src">依据：packages/core/src/tools/tool.ts:273；workspace/filesystem/local-filesystem.ts；mcp/client/url-policy.ts；code-mode/isolated-vm；server/handlers。</p>
+
+      <h3 id="hitl-ext">审批接外部平台</h3>
+      <p>机制部分见「审批危险操作」。审批的「人」在哪批是完全开放的：chunk 里有全部原料，批的动作只是两个 HTTP 端点。所以任何能收 webhook、发 HTTP 的平台都能当审批面。</p>
+      <p>飞书两方案。方案 A 桥接服务（快）：监听 agent 流，捞到审批 chunk 就发飞书交互卡片（同意/拒绝按钮）；飞书回调里调 approve/decline。Node 或 Java 都行。</p>
+      <figure>
+        <figcaption>桥接核心逻辑</figcaption>
+        <pre>for await (const chunk of agentStream) {
+  if (chunk.type === 'tool-call-approval') {
+    const { runId, toolCallId, toolName, args } = chunk.payload;
+    await feishu.post('interactive', {
+      card: {
+        header: { title: { content: `审批：${toolName}` } },
+        elements: [
+          { tag: 'div', text: { content: JSON.stringify(args, null, 2) } },
+          { tag: 'action', actions: [
+            { tag: 'button', text: '同意', type: 'primary',
+              value: { runId, toolCallId, decision: 'approve' } },
+            { tag: 'button', text: '拒绝', type: 'danger',
+              value: { runId, toolCallId, decision: 'decline' } },
+          ]},
+        ],
+      },
+      receive_id: { type: 'open_id', id: APPROVER },
+    });
+  }
+}
+
+app.post('/feishu/callback', async (req, res) =&gt; {
+  const { runId, toolCallId, decision } = req.body.action.value;
+  await fetch(`${MASTRA}/api/agents/myAgent/${decision}-tool-call`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ runId, toolCallId }),
+  });
+});</pre>
+      </figure>
+      <p>方案 B channels 通道（框架内建）：channels 为聊天平台审批设计，<code>APPROVAL_BUTTON_PLATFORMS = ['slack', 'discord', 'teams', 'gchat', 'google-chat', 'telegram']</code>（channels/agent-channels.ts:86），这些平台直接渲染审批按钮。飞书不在列表，要同样体验需自写 adapter。</p>
+      <div class="note">
+        <p>两个工程建议：桥接加定时任务，超时未批自动 decline，避免 run 永久挂起。回调里校验点击者在审批人名单，防卡片转发后任意人可批。</p>
+      </div>
+      <p class="src">依据：channels/agent-channels.ts:86；loop/workflows/agentic-execution/tool-call-step.ts:577；server/handlers/agents.ts:2778、:2918。</p>
+
+      <h3 id="memory-store">会话与存储</h3>
+      <p><code>threadId</code> 是一个会话，<code>resourceId</code> 是归属者（线程所有权隔离，FGA 校验）。每轮的处理：</p>
+      <ol>
+        <li>客户端带 threadId 调 generate 或 stream。</li>
+        <li><code>prepare-memory-step</code> 组装 MessageList：系统提示 + 历史（MessageHistory 从 storage 读）+ 语义召回（SemanticRecall）+ 工作记忆（WorkingMemory）+ 新消息。</li>
+        <li>运行中 SaveQueueManager 按 step 落库：每完成一步就 <code>memory.saveMessages</code>，不等全部结束。</li>
+        <li>onFinish 补写 response 消息，异步生成线程标题。</li>
+      </ol>
+      <p>「多轮」的本质：每轮从存储重放历史加增量召回，模型无状态。存储链路：MastraMemory 契约 → <code>@mastra/memory</code> 实现 → storage 域（memory 域存 threads/messages，workflows 域存 run 快照）→ <code>stores/*</code> 20+ 适配器。不配 storage 时 core 有 filesystem 兜底。</p>
+      <p class="src">依据：processors/memory/message-history.ts:187、:236、:387；agent/save-queue/index.ts:21、:165、:216；agent/agent.ts:9168、:9188；memory/memory.ts:529、:568；storage/base.ts:396、:764；storage/domains/memory/base.ts:43、domains/workflows/base.ts:14。</p>
+
+      <h3 id="reconnect">重连与续跑</h3>
+      <p>默认：客户端断开等于取消这轮。Hono 把请求信号接进 handler（<code>c.req.raw.signal</code>，hono/src/index.ts:209），断连 → abortSignal 传播 → loop 取消。已完成的 step 已落库，重进能看到断点前的输出。</p>
+      <ul>
+        <li>恢复历史：<code>GET /api/memory/threads/:threadId/messages</code>（handlers/memory.ts:1083）。下一轮带同一 threadId 自动接上。</li>
+        <li>看进行中的输出：<code>POST /api/agents/:id/threads/subscribe</code>（SSE，<code>sseFlushOnConnect: true</code>，连上先推当前状态）。为多端或重进看同一会话设计。</li>
+        <li>后台继续跑：durable agent（<code>recovery: { durableAgents: 'auto' }</code>，agent/durable/create-durable-agent.ts:83），快照持久化，重启断点续跑；或 <code>queue-message</code> / <code>send-message</code> 不绑定调用方连接。</li>
+      </ul>
+      <table>
+        <thead><tr><th>断点时的状态</th><th>去处</th></tr></thead>
+        <tbody>
+          <tr><td>已执行完的工具</td><td>结果已按 step 落库，重进拉消息就有。</td></tr>
+          <tr><td>挂起等审批</td><td>快照持久化，<code>suspended-runs</code> 找回，approve 后从挂起 step 继续，不重跑已完成的。</td></tr>
+          <tr><td>执行中被切断</td><td>默认 run 终止、快照删除。durable 模式 <code>recoverActiveRuns()</code>（create-evented-agent.ts:98）断点续跑。另有 <code>POST /agents/:id/recover</code>。</td></tr>
+        </tbody>
+      </table>
+      <p class="src">依据：server-adapters/hono/src/index.ts:209；server/handlers/agents.ts:2298、:2408、:2918、:3037、:3161；handlers/memory.ts:1083；agent/durable/。</p>
+
+      <h3 id="upgrade">更新与共存</h3>
+      <p>部署时正在跑的 run，三种命运：普通流式 run 丢失（消息已落库，重发即可）；挂起等审批的照常可批；durable run 自动断点续跑（deployer 启动钩子 <code>recoverAllDurableAgents()</code>，deployer/src/server/handlers/restart-active-runs.ts:18）。<code>running</code> 检查点只有开了 <code>durableAgents: 'auto'</code> 才持久化——丢与不丢的分水岭。workflow 侧 <code>POST /workflows/:id/restart-all-active-workflow-runs</code> 批量拉活；已到终态的快照视为权威不重跑（workflow.ts:5550）。</p>
+      <p>新旧冲突三道防线：</p>
+      <ol>
+        <li>状态 CAS 认领。恢复时 <code>updateWorkflowState({ status: 'running', expectedStatus })</code> 是原子 compare-and-set。新旧实例抢同一个 run 只有一个成功，另一个抛 <code>WORKFLOW_RESUME_ALREADY_CLAIMED</code>（workflow.ts:5051-5091）。不会双跑。</li>
+        <li>线程租约。跨进程 thread lease（TTL + fencing）。同一线程只允许租约持有者执行；旧实例租约失效后，每次工具调用前的 fence 检查让它停下（thread-stream-runtime.ts:3653、:937）。</li>
+        <li>Agent 版本化。<code>/stored/agents/:id/versions</code> 的 list/create/activate/restore/compare。<code>#execute</code> 顶部 <code>resolveVersionedAgent</code>（agent.ts:8607），客户端可用 <code>requestContext.agentVersionId</code> 钉版本。旧 run 用旧定义跑完，新请求走新版本。</li>
+      </ol>
+      <div class="note">
+        <p>风险：core 的 workflows 里没有快照 schema 迁移机制。大改 step 结构、工具签名、状态类型后，旧快照在新代码上恢复可能出错。大改走新版本，或部署前排空（drain）。</p>
+      </div>
+      <p class="src">依据：workflows/workflow.ts:5051-5091、:5550；agent/thread-stream-runtime.ts:3653、:937；server/handlers/agent-versions.ts；agent/agent.ts:8607；deployer/src/server/handlers/restart-active-runs.ts:18。</p>
+
+      <h3 id="obs">可观测性</h3>
+      <p>自动埋点是一棵 span 树（SpanType 枚举，observability/types/tracing.ts:36）：</p>
+      <figure>
+        <figcaption>span 树</figcaption>
+        <pre>AGENT_RUN（run 根 span）
+ ├── MODEL_GENERATION（token 用量、prompt、completion）
+ │    ├── MODEL_STEP → MODEL_INFERENCE / MODEL_CHUNK
+ │    ├── tool span
+ │    └── PROCESSOR_RUN
+ ├── WORKFLOW_RUN（+ step spans）
+ └── SCORER_RUN / SCORER_STEP</pre>
+      </figure>
+      <ul>
+        <li><code>getOrCreateSpan</code>（utils.ts:137）基于 AsyncLocalStorage 自动父子关联。</li>
+        <li>W3C tracecontext 传播（w3c.ts），跨服务串成一棵树。</li>
+        <li>默认 MastraStorageExporter 写 storage 的 observability 域，Studio Traces 页看。支持 SensitiveDataFilter 脱敏。</li>
+      </ul>
+      <p>HTTP 接口：<code>GET /api/observability/traces</code>（列表、/light 轻量）、<code>/:traceId</code>（详情）、<code>/:traceId/spans/:spanId</code>、<code>/:traceId/trajectory</code>（轨迹回放）、<code>/branches</code>、<code>POST .../score</code>、<code>POST .../delete</code>；配套 <code>GET /api/logs</code>、<code>/api/logs/:runId</code>、<code>/api/scores/*</code>。client-js 有现成 observability resource。</p>
+      <table>
+        <thead><tr><th>后端</th><th>方案</th></tr></thead>
+        <tbody>
+          <tr><td>开源首选</td><td>Langfuse（MIT 核心，Docker 自托管，<code>@mastra/langfuse</code>）</td></tr>
+          <tr><td>开源 APM</td><td>Jaeger / Grafana Tempo+Loki / SigNoz，走 <code>@mastra/otel-exporter</code>（OTLP）</td></tr>
+          <tr><td>源码可用</td><td>Arize Phoenix（ELv2）、Laminar、PostHog 社区版</td></tr>
+          <tr><td>商业</td><td>LangSmith、Datadog、Braintrust、Arthur、Sentry</td></tr>
+          <tr><td>自存</td><td>MastraStorageExporter（默认）+ Studio Traces、MastraPlatformExporter、ClickHouse 聚合</td></tr>
+        </tbody>
+      </table>
+      <figure>
+        <figcaption>Langfuse 接法（README 原样）。环境变量 LANGFUSE_PUBLIC_KEY / SECRET_KEY</figcaption>
+        <pre>import { Observability } from '@mastra/observability';
+import { LangfuseExporter } from '@mastra/langfuse';
+
+export const mastra = new Mastra({
+  observability: new Observability({
+    configs: {
+      langfuse: {
+        serviceName: 'my-service',
+        exporters: [new LangfuseExporter()],
+      },
+    },
+  }),
+});</pre>
+      </figure>
+      <p>Java 进同一棵树：otel-exporter 指向同一个 OTel Collector；Java 侧用 OpenTelemetry SDK 从请求头提取 traceparent 继续开 span。</p>
+      <p class="src">依据：observability/types/tracing.ts:36、utils.ts:137、w3c.ts；observability/ 目录包清单；observability/langfuse/README.md:12-30；server/handlers 路由清单。</p>
+
+      <h3 id="nginx">nginx</h3>
+      <figure>
+        <figcaption>SSE 端点单独处理，白名单之外的 /api 全部 404</figcaption>
+        <pre>upstream mastra { server 127.0.0.1:8080; keepalive 32; }
+limit_req_zone $binary_remote_addr zone=mastra_auth:10m rate=10r/s;
+
+server {
+    listen 443 ssl http2;
+    server_name ai.example.com;
+    ssl_certificate     /etc/nginx/certs/fullchain.pem;
+    ssl_certificate_key /etc/nginx/certs/privkey.pem;
+    server_tokens off;
+    client_max_body_size 10m;
+
+    proxy_http_version 1.1;
+    proxy_set_header Host              $host;
+    proxy_set_header X-Real-IP         $remote_addr;
+    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    # 1. SSE 流式端点
+    location ~ ^/api/agents/[\w-]+/(stream|threads/subscribe)$ {
+        proxy_pass http://mastra;
+        proxy_buffering off;
+        proxy_cache off;
+        add_header X-Accel-Buffering no;
+        gzip off;
+        proxy_set_header Connection "";
+        proxy_read_timeout 3600s;
+        proxy_send_timeout 3600s;
+    }
+
+    # 2. 普通放行端点
+    location ~ ^/api/agents/[\w-]+/(generate|approve-tool-call|decline-tool-call)$ {
+        proxy_pass http://mastra;
+        limit_req zone=mastra_auth burst=20 nodelay;
+        proxy_read_timeout 300s;
+    }
+    location /api/my/ { proxy_pass http://mastra; limit_req zone=mastra_auth burst=20 nodelay; }
+
+    # 3. 其余 /api 拒绝；4. 非 /api 拒绝
+    location /api/ { return 404; }
+    location / { return 404; }
+}</pre>
+      </figure>
+      <ol>
+        <li>SSE 三件套缺一不可：<code>proxy_buffering off</code> + <code>X-Accel-Buffering no</code> + <code>gzip off</code>。少一个，流式输出攒批。</li>
+        <li><code>proxy_read_timeout</code> 拉长。默认 60s 会掐断 SSE 和慢 LLM。流式 3600s、generate 300s。</li>
+        <li><code>Connection ""</code> 加 <code>proxy_http_version 1.1</code>，配合 upstream keepalive。</li>
+        <li>断连语义：nginx 把客户端断开传给后端，run 取消。要断开后继续跑，用 durable 或 queue-message，不是改 nginx。</li>
+        <li>Java 和 Mastra 同内网时直连 <code>http://mastra:8080</code>，不过 nginx。</li>
+      </ol>
+      <p class="src">依据：端点清单与断连语义的源码核实（见「端点与屏蔽」「重连与续跑」）；nginx 指令为通用运维知识。</p>
+
+      <h3 id="diagrams">架构图索引</h3>
+      <p>八张图由 Archify 生成，全部通过自动校验（schema、投递、严格检查、真实浏览器检查）。节点带源码引用，可跳到对应 commit 的 GitHub 位置。相对路径基于本文件位置。</p>
+      <table>
+        <thead><tr><th>图</th><th>内容</th><th>锚定 commit</th></tr></thead>
+        <tbody>
+          <tr><td><a href="../../.archify/architecture-mastra-framework-20261020-110152/mastra-framework-architecture.html">框架架构总览</a></td><td>CLI/Studio → @mastra/server → Mastra 容器 → Agent/Workflow/Tools/Memory → LLM 与存储适配器</td><td>8271439b49</td></tr>
+          <tr><td><a href="../../.archify/sequence-agent-request-20261020-110152/mastra-agent-request-sequence.html">Agent 请求时序</a></td><td>一次 stream 请求的生命周期：鉴权 → 记忆回忆 → LLM → 工具 → SSE → 落库</td><td>8271439b49</td></tr>
+          <tr><td><a href="../../.archify/workflow-tool-call-loop-20261020-110152/mastra-tool-call-loop.html">工具调用循环</a></td><td>llm-execution → tool-call（含审批挂起）→ 继续判定 → 回环或 finish</td><td>8271439b49</td></tr>
+          <tr><td><a href="../../.archify/sequence-hitl-approval-20261020-134615/mastra-hitl-approval-sequence.html">人工审批往返</a></td><td>approval chunk → suspend 快照 → 批准 → resume → 终态删快照</td><td>8271439b49</td></tr>
+          <tr><td><a href="../../.archify/lifecycle-suspend-resume-20261020-134615/mastra-suspend-resume-lifecycle.html">Run 挂起与恢复状态机</a></td><td>pending → running → success/failed，running 与 suspended 互转</td><td>8271439b49</td></tr>
+          <tr><td><a href="../../.archify/architecture-mcp-old-20261022-160037/mastra-mcp-old-architecture.html">MCP 架构（旧版）</a></td><td>MCP SDK 2.2.0 时代，无 Events。与新图同布局便于对比</td><td>8271439b49</td></tr>
+          <tr><td><a href="../../.archify/architecture-mcp2-events-20261022-153915/mastra-mcp2-events-architecture.html">MCP 2.0 支持（含 Events）</a></td><td>SDK 2.3.1 + SEP-3415：poll/push/webhook 投递、SignalProvider 进线程</td><td>846639e853</td></tr>
+          <tr><td><a href="../../.archify/dataflow-conversation-recovery-20261026-170535/mastra-conversation-recovery-dataflow.html">会话持久化与恢复数据流</a></td><td>会话产生 → 按 step 落库 → 持久层 → 恢复入口 → 重进续跑</td><td>846639e853</td></tr>
+        </tbody>
+      </table>
+      <p class="src">图的 candidate 和校验回执在 <code>.archify/</code> 各子目录。</p>
+
+      <h2 id="update">11 更新梳理（2026-10-23 → 11-19）</h2>
+      <p>本轮 upstream 从 <code>cabb887412</code> 快进到 <code>10b2d3fc6d</code>，共 1592 个 commit（336 feat、690 fix）。下面按主题梳理。逐条来源是各包 <code>CHANGELOG.md</code> 和对应 PR。</p>
+
+      <h3 id="update-versions">版本对照</h3>
+      <table>
+        <thead><tr><th>包</th><th>上一轮</th><th>本轮</th><th>主要落点</th></tr></thead>
+        <tbody>
+          <tr><td><code>@mastra/core</code></td><td>1.79.0</td><td>1.85.0</td><td>Knowledge（1.82）、resumable streams（1.83）、workflow state 与恢复（1.84）、审批修复（1.85）</td></tr>
+          <tr><td><code>mastra</code> CLI / <code>create-mastra</code></td><td>1.35.0</td><td>1.40.1</td><td><code>mastra api span</code> 命令、实验换模型、UI 规范化</td></tr>
+          <tr><td><code>@mastra/client-js</code></td><td>1.56.0</td><td>1.61.1</td><td>写请求默认不再重试</td></tr>
+          <tr><td><code>@mastra/react</code></td><td>1.12.0</td><td>1.15.2</td><td>配套 Studio 新页面</td></tr>
+          <tr><td><code>@mastra/ai-sdk</code></td><td>1.11.2</td><td>1.12.0</td><td>小版本</td></tr>
+          <tr><td><code>@mastra/memory</code></td><td>1.39.0</td><td>1.41.2</td><td>observational memory 一串修复</td></tr>
+          <tr><td><code>@mastra/mcp</code></td><td>2.5.0</td><td>2.10.0</td><td><code>toolResult</code>、task 接答、caller 进 requestContext。要求 core ≥ 1.83</td></tr>
+          <tr><td><code>@mastra/playground-ui</code></td><td>66.0.0-alpha</td><td>70.1.0</td><td>Knowledge 页、spans 可组合、oxlint 规则</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="update-knowledge">Knowledge（alpha）</h3>
+      <p>core 1.82.0 加的大功能。给 agent 一块跨会话、跨 agent 共享的知识层：制度、产品文档、惯例、runbook、别的 agent 学到的东西。</p>
+      <ul>
+        <li>形状是图，不是文档列表。<b>page</b> 是带 markdown 正文的主题，可嵌套（<code>org:acme#policies/refund</code>）。<b>note</b> 是加在 page 上的短事实，带作者。<b>link</b> 用 <code>[[org:acme#policies/refund]]</code> 连页面。<b>scope</b> 是图的一块隔离区。</li>
+        <li>权限不是模型决定的。scope 声明里写规则，按 run 算出角色：viewer 只读、contributor 加内容、editor 改页面、owner 可删可移动。</li>
+        <li>用法：<code>new Knowledge({...})</code> 从 <code>@mastra/core/knowledge</code> 导入，挂到 agent（<code>tools: true</code> 给搜索读写工具），注册进 <code>Mastra</code> 后用 <code>KNOWLEDGE_ROUTES</code> 在 Studio 浏览。</li>
+        <li>钉住的 page 经 signals 进 agent 上下文，运行中改了，下一轮生效。</li>
+        <li>与 Memory 的分工：Memory 管一次会话内的延续，Knowledge 管跨会话、跨 agent、跨人的共享信息。</li>
+      </ul>
+      <p>alpha 边界（文档 <code>knowledge/overview.mdx</code> 原文）：API 会在版本间变；能读多个 scope 的 agent 可能把内容从一个 scope 带进另一个；没有内置 importer（平台有）；旧页面不会过期。</p>
+      <p>配套变化：</p>
+      <ul>
+        <li>1.82.0 删掉旧的 <code>experimental_subconscious</code> 和 Memory 的 <code>knowledge</code> 选项。设了会抛错，提示把 Knowledge 挂到 agent 上。</li>
+        <li>1.82.0 加 agent 的 <code>scopes</code> 函数：收到本次 run 的 scopes（来自调用、<code>defaultOptions</code>、request context），返回最终集合。<code>resource:</code> 和 <code>thread:</code> 前缀的必须保留，丢了抛错。</li>
+        <li>1.84.0 加 <code>knowledge.movePage()</code>（连子页面搬家，保留 ID、notes、pins）和 <code>knowledge.reembed()</code>（给配了 vector 之前就存在的页面补 embedding）。scope 模式里的 <code>$param</code> 改为只匹配一段，scope 值不能带裸 <code>/</code>（alpha 内 breaking）。</li>
+        <li>新文档节 7 页：overview、scopes-and-access、agents-and-tools、pinned-context、search、load-your-content、patterns，另有 studio/knowledge。</li>
+      </ul>
+
+      <h3 id="update-streams">Resumable streams（1.83.0）</h3>
+      <p>以前只有 durable agent 发布 run 流。现在每个注册到 <code>Mastra</code> 的 agent 默认发布：run 的每个 chunk 发到 stream topic，并留 replay cache。效果：</p>
+      <ul>
+        <li>客户端断线重连，从缓存追上。</li>
+        <li>另一个读者用 <code>agent.observe(runId)</code> 跟看同一次 run。</li>
+        <li>任何读者能用 <code>observe().abort()</code> 或 <code>agent.abortRunStream(runId)</code> 停掉它。</li>
+      </ul>
+      <p>Agent 字段 <code>streams</code>：注册的 agent 默认开，独立 agent 默认关。对象可配 <code>pubsub</code>、<code>cache</code>、<code>shouldCache</code>、<code>cleanupTimeoutMs</code>。注意它不是崩溃恢复：进程死了 run 就停。要跨重启续跑，仍用 durable agents——它们经同一层发布。文档 <code>agents/resumable-streams.mdx</code>。</p>
+
+      <h3 id="update-workflow">Workflow state 与恢复（1.84.0）</h3>
+      <ul>
+        <li><code>getState()</code> 和 <code>updateState()</code> 进了 workflow step、workflow 里的 tool、<code>.map()</code>、循环和分支条件、sleep 函数。以前共享值要经 step 输出绕，现在直接读写顶层 state。</li>
+        <li><code>getStepResultAsync()</code>（1.82.0）替代 <code>getStepResult</code>，旧名废弃。</li>
+        <li>恢复循环：默认引擎的 run 所在实例崩溃后，不用等别的实例启动就自动重启。</li>
+        <li><code>agent.recoverResume()</code>：处理审批或 resume 的进程崩了，不用再问一次决定，直接收尾。</li>
+        <li>实验性 <code>storageVersion: 2</code>（durable / evented agent 与 workflow）：run 存成 header 加 outcomes，<code>start()</code>、<code>resume()</code>、<code>restart()</code>、time travel 不再把每个 step 结果全载进内存。</li>
+      </ul>
+
+      <h3 id="update-approval">审批安全修复（1.85.0）</h3>
+      <p>修复了 resume 后 tool call 绕过审批的洞：模型一次回复里调了多个工具、其中一个 suspend 或等审批时，resume 之后同批的另一个工具可能不问就跑。影响调用级 <code>requireToolApproval</code> 函数和所有 <code>createEventedAgent</code> 的审批策略。现在都会问。相关语义：调用级函数不随 run 存储，resume 时不再传它的话，之后每个工具都要审批。用到审批的应升到 1.85.0。</p>
+
+      <h3 id="update-mcp">MCP 2.6 → 2.10</h3>
+      <ul>
+        <li>2.8：<code>MCPServer</code> 的 <code>toolResult</code> 选项让工具给 MCP 客户端返回图片、音频、文件；MCP task 缺输入时可以在 agent 聊天里直接回答（没配 <code>inputRequests</code> handler 时）；修了 FGA 下「列得出的工具调不得」和 <code>disconnect()</code> 挂起。</li>
+        <li>2.9：MCP 工具的 <code>requestContext</code> 里能拿到 server auth 解析出的调用者（用户、权限、角色、resource、organization）；server 标记 app-only（<code>_meta.ui.visibility</code>）的工具不再进 <code>listTools()</code>；装包要求 core ≥ 1.83.0。</li>
+        <li>2.10：<code>appsRequireClientSupport</code>——只对声明支持 MCP Apps 的客户端提供 Apps；<code>maxRequestBodySize</code>——超过 4 MiB 默认的请求体不再直接 413。</li>
+        <li>新包 <code>@mastra/mcp-apps-components</code> 0.2.0：预置 MCP Apps，注册即用。</li>
+      </ul>
+
+      <h3 id="update-client">client-js 重试语义（1.61.0）</h3>
+      <p>写请求（POST、PUT、PATCH、DELETE）默认只发一次，不重试。以前服务端 500 会重发，可能把一次生成或 workflow 启动做两遍。读请求（GET、HEAD、OPTIONS）仍重试三次；<code>aggregateTraces()</code> 等四个只读的 observability 查询虽走 POST 也保留读默认。显式设 <code>retries</code> 可恢复旧行为。另有：内置 MCP memory 工具集删掉 <code>save_messages</code> 和 <code>search_memory</code>，加了只读的 <code>get_working_memory</code>。</p>
+
+      <h3 id="update-memory">memory 修复（1.40 → 1.41.2）</h3>
+      <ul>
+        <li>observational memory 的 observer 失败信息带 span 引用和分类；中断 agent 时能对上原因。</li>
+        <li>PG 上 observational memory 的向量查询原来全表扫，补了 <code>resource_id</code>、<code>thread_id</code> 元数据索引；开 <code>disableInit</code> 的要手动建。</li>
+        <li>durable / evented agent 每条消息写两三条 semantic recall 向量行的 bug 修了。重复行占了 <code>topK</code> 名额，让 recall 变少。</li>
+        <li>删 thread 时同步删 pubsub 里的活事件流（Redis 里不再留到过期）。</li>
+      </ul>
+
+      <h3 id="update-misc">CLI、新包、模板</h3>
+      <ul>
+        <li>CLI 1.36.0 加 <code>mastra api span query</code> 和 <code>span aggregate</code>；实验对话框可挑模型（对应 core 的 <code>agentModel</code>）；Studio / Factory 界面统一 sentence case。CLI 1.36 起要求 core ≥ 1.80。</li>
+        <li>新包：<code>@mastra/json-render</code> 0.1.0（agent 组流式界面）、<code>@mastra/platform</code> 0.1.1（平台托管 Memory / Knowledge / Browser / workspace 客户端）、<code>@mastra/ring-signals</code> 0.1.0、<code>@mastra/auth-neon</code>、<code>@mastra/auth-studio</code>。</li>
+        <li>新模板 7 个：template-factory、template-factory-self-hosted、template-accounts-payable-invoice-processing、template-agent-workflow-billing、template-insurance-policy-checking、template-mongodb-bedrock-agent、template-personal-assistant。</li>
+        <li>core 1.85.0 其它：session stream 以 <code>displayState=false</code> 打开时先补当前状态事件；带 processor 的 agent 每次 call 少 14 次左右空 storage 读；模型整步耗尽输出额度且没写任何内容时，<code>generate()</code>/<code>stream()</code> 报错而不是返回空文本。</li>
+      </ul>
+    </main>
+  </div>
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var themeBtn = document.getElementById("theme");
+      function paintTheme() {
+        var dark = root.getAttribute("data-theme") === "dark";
+        themeBtn.textContent = dark ? "浅色" : "深色";
+      }
+      paintTheme();
+      themeBtn.addEventListener("click", function () {
+        var next = root.getAttribute("data-theme") === "dark" ? "light" : "dark";
+        root.setAttribute("data-theme", next);
+        localStorage.setItem("mastra-guide-theme", next);
+        paintTheme();
+      });
+
+      var toggle = document.getElementById("nav-toggle");
+      var scrim = document.getElementById("scrim");
+      function setNav(open) {
+        document.body.classList.toggle("nav-open", open);
+        toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+      toggle.addEventListener("click", function () {
+        setNav(!document.body.classList.contains("nav-open"));
+      });
+      scrim.addEventListener("click", function () { setNav(false); });
+      document.getElementById("guide-nav").addEventListener("click", function (event) {
+        if (event.target.closest("a")) setNav(false);
+      });
+
+      var links = Array.prototype.slice.call(document.querySelectorAll(".side a"));
+      var sections = links.map(function (a) {
+        return document.querySelector(a.getAttribute("href"));
+      }).filter(Boolean);
+      function mark(id) {
+        links.forEach(function (a) {
+          a.classList.toggle("active", a.getAttribute("href") === "#" + id);
+        });
+      }
+      function currentSection() {
+        var line = 96;
+        var found = sections[0];
+        sections.forEach(function (s) {
+          if (s.getBoundingClientRect().top <= line) found = s;
+        });
+        if (found) mark(found.id);
+      }
+
+      var bar = document.getElementById("progress");
+      function onScroll() {
+        var h = document.documentElement;
+        var max = h.scrollHeight - h.clientHeight;
+        bar.style.width = (max > 0 ? (h.scrollTop / max) * 100 : 0) + "%";
+        currentSection();
+      }
+      document.addEventListener("scroll", onScroll, { passive: true });
+      onScroll();
+
+      var q = document.getElementById("feature-q");
+      var rows = Array.prototype.slice.call(document.querySelectorAll("#feature-table tbody tr"));
+      var count = document.getElementById("feature-count");
+      function filter() {
+        var needle = q.value.trim().toLowerCase();
+        var shown = 0;
+        rows.forEach(function (row) {
+          var hit = !needle || row.textContent.toLowerCase().indexOf(needle) !== -1;
+          row.classList.toggle("hidden", !hit);
+          if (hit) shown += 1;
+        });
+        count.textContent = needle ? shown + " / " + rows.length : rows.length + " 项";
+      }
+      q.addEventListener("input", filter);
+      filter();
+    })();
+  </script>
+</body>
+</html>

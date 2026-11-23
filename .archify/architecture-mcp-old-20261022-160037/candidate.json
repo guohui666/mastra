@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Mastra MCP 架构（旧版 · 无 Events）",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-mcp-old-20261022-160037/mastra-mcp-old-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra",
+      "provider": "github",
+      "revision": "8271439b491f5f777590abfda9a0ac7f1e3212c2"
+    }
+  },
+  "components": [
+    { "id": "ext-servers", "type": "cloud", "label": "外部 MCP Servers", "sublabel": "MCP SDK 2.2.0", "pos": [40, 280], "size": [140, 64], "sources": [{ "path": "packages/mcp/package.json", "line": 42, "label": "@modelcontextprotocol 2.2.0" }] },
+    { "id": "mcp-client", "type": "backend", "label": "MCPClient", "sublabel": "tools()", "pos": [260, 280], "size": [150, 64], "sources": [{ "path": "packages/mcp/src/client/configuration.ts", "line": 101, "label": "class MCPClient" }, { "path": "packages/mcp/src/client/client.ts", "line": 1394, "label": "tools()" }] },
+    { "id": "agent", "type": "backend", "label": "Agent / Thread", "sublabel": "toolsets + MCP guidance", "pos": [490, 280], "size": [140, 64], "sources": [{ "path": "packages/core/src/agent/agent.ts", "line": 5395, "label": "listToolsets()" }] },
+    { "id": "mcp-server", "type": "backend", "label": "MCPServer", "sublabel": "streamable HTTP · SSE", "pos": [710, 280], "size": [160, 64], "sources": [{ "path": "packages/mcp/src/server/server.ts", "line": 158, "label": "class MCPServer" }, { "path": "packages/core/src/mcp/index.ts", "line": 29, "label": "MCPServerBase（core）" }] },
+    { "id": "ext-clients", "type": "external", "label": "MCP 客户端", "sublabel": "外部消费者", "pos": [960, 280], "size": [130, 64] },
+    { "id": "routes", "type": "backend", "label": "@mastra/server /mcp/*", "sublabel": "tools · resources · transports", "pos": [710, 120], "size": [170, 60], "sources": [{ "path": "packages/server/src/server/handlers/mcp.ts", "line": 170, "label": "tools 路由" }, { "path": "packages/server/src/server/handlers/mcp.ts", "line": 424, "label": "/mcp streamable 路由" }, { "path": "packages/server/src/server/handlers/mcp.ts", "line": 451, "label": "/sse 路由" }] },
+    { "id": "studio", "type": "frontend", "label": "Studio", "sublabel": "MCP 工具页面", "pos": [490, 120], "size": [140, 60], "sources": [{ "path": "packages/playground/src/pages/mcps/index.tsx", "line": 1, "label": "mcps 列表页" }] }
+  ],
+  "connections": [
+    { "id": "c-call", "from": "mcp-client", "to": "ext-servers", "label": "tools()" },
+    { "id": "c-toolsets", "from": "mcp-client", "to": "agent", "label": "toolsets" },
+    { "id": "c-register", "from": "agent", "to": "mcp-server", "label": "注册工具" },
+    { "id": "c-serve", "from": "mcp-server", "to": "ext-clients", "label": "MCP 服务" },
+    { "id": "c-crud", "from": "routes", "to": "mcp-server", "label": "tools 管理" },
+    { "id": "c-manage", "from": "studio", "to": "routes", "label": "管理" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "MCP 基座（旧版）",
+      "items": [
+        "@mastra/mcp 2.5.0-alpha.1，@modelcontextprotocol 2.2.0（SDK 已是 2.x）",
+        "MCPServerBase 契约定义在 @mastra/core（core/src/mcp）",
+        "OAuth 客户端流程已具备（oauth-provider / oauth-callback-server）"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "能力面（无 Events）",
+      "items": [
+        "MCPClient.tools() 注入 agent toolsets（makeCoreTool 转换）",
+        "MCP guidance 作为系统消息注入上下文",
+        "MCPServer 反向暴露 agents / tools（streamable HTTP · SSE · stdio）",
+        "无事件订阅：客户端只有 tools / resources / prompts"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "接入面（旧路由）",
+      "items": [
+        "/mcp/:serverId/tools · /resources · /mcp（streamable）· /sse · /messages",
+        "/mcp/v0/servers 管理 server 注册",
+        "无任何 events 路由"
+      ]
+    }
+  ]
+}

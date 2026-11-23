@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\code\\mastra\\.archify\\architecture-mcp-old-20261022-160037\\candidate.json",
+    "sha256": "43a42023ed6e542f101099505da3e5603b28c55d59257a1de2ece7eac9b5bb9b",
+    "bytes": 4079
+  },
+  "artifact": {
+    "path": "D:\\code\\mastra\\.archify\\architecture-mcp-old-20261022-160037\\mastra-mcp-old-architecture.html",
+    "sha256": "4b39ffc0cddba12763de1c6a6a6c4aa68139c3ccd618b4291c4982f4df4fee98",
+    "bytes": 821029
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\code\\mastra\\.archify\\architecture-mcp-old-20261022-160037\\mastra-mcp-old-architecture.finalize.json",
+    "summaryReceipt": "D:\\code\\mastra\\.archify\\architecture-mcp-old-20261022-160037\\mastra-mcp-old-architecture.finalize-summary.json",
+    "browserCheckReceipt": "D:\\code\\mastra\\.archify\\architecture-mcp-old-20261022-160037\\mastra-mcp-old-architecture.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-20T03:15:06.258Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 4760,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

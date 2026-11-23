@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "67b73406-7b61-4119-bf20-833db1caf663",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "D:\\code\\mastra\\.archify\\sequence-agent-request-20261020-110152\\candidate.json",
+  "output": "D:\\code\\mastra\\.archify\\sequence-agent-request-20261020-110152\\mastra-agent-request-sequence.html",
+  "specification": {
+    "sha256": "7146e5c66c9bd46b4d2aa7d37507ea69e3dacc722a53d45fb94ee110791e90a1",
+    "bytes": 6570
+  },
+  "artifact": {
+    "sha256": "99c9d087370efc4ee87350f6a776a168293017559c50986e2a0fece33a1e2d99",
+    "bytes": 829141
+  }
+}

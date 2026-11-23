@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "explainer",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\code\\mastra\\.archify\\explainer-mcp-call-params-20261022-165953\\candidate.archify.md",
+    "sha256": "9bfa4be3fb208e1e6c3539b5edf4eb52e18d5b2ad07e42d7cbafabd09f30c596",
+    "bytes": 12891
+  },
+  "artifact": {
+    "path": "D:\\code\\mastra\\.archify\\explainer-mcp-call-params-20261022-165953\\mcp-call-params.html",
+    "sha256": "6b4cf2b6b104f1f282c1c8ef4e162fbac95b1fbf1698cded9b88a04739adc9b0",
+    "bytes": 1335534
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "not-run"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\code\\mastra\\.archify\\explainer-mcp-call-params-20261022-165953\\mcp-call-params.finalize.json",
+    "summaryReceipt": "D:\\code\\mastra\\.archify\\explainer-mcp-call-params-20261022-165953\\mcp-call-params.finalize-summary.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-20T03:15:06.258Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3403,
+  "browserCheck": {
+    "requested": false,
+    "ran": false
+  }
+}

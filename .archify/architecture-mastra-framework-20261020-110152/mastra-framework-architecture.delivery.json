@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "83e5a99a-3d8d-474d-96ac-0c541d836532",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\code\\mastra\\.archify\\architecture-mastra-framework-20261020-110152\\candidate.json",
+  "output": "D:\\code\\mastra\\.archify\\architecture-mastra-framework-20261020-110152\\mastra-framework-architecture.html",
+  "specification": {
+    "sha256": "3109286d1c7a9e6321c2b7220f17c305bd10e896f459587977b5905b628476e0",
+    "bytes": 6911
+  },
+  "artifact": {
+    "sha256": "bc456ab4362aaa4797bbaae72eba56271541ef7368530294e0f90cc134c83835",
+    "bytes": 840756
+  }
+}

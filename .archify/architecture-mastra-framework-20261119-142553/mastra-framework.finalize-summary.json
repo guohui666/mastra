@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "architecture",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/guohui/code/mastra/.archify/architecture-mastra-framework-20261119-142553/candidate.json",
+    "sha256": "5a327618c751bff9010bbb6ee3bd7bc6eb8b8c3d547f3ac9f74cead1ed460336",
+    "bytes": 20389
+  },
+  "artifact": {
+    "path": "/Users/guohui/code/mastra/.archify/architecture-mastra-framework-20261119-142553/mastra-framework.html",
+    "sha256": "124444af01de4e3964c2f1c6deadd8d3269d7382bf28a7e00fe9839e8d96bd5f",
+    "bytes": 891477
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/guohui/code/mastra/.archify/architecture-mastra-framework-20261119-142553/mastra-framework.finalize.json",
+    "summaryReceipt": "/Users/guohui/code/mastra/.archify/architecture-mastra-framework-20261119-142553/mastra-framework.finalize-summary.json",
+    "browserCheckReceipt": "/Users/guohui/code/mastra/.archify/architecture-mastra-framework-20261119-142553/mastra-framework.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-19T06:27:46.083Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6106,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  },
+  "visualReviewRecommendation": {
+    "action": "inspect-route-readability",
+    "signals": {
+      "routesOverSuggestedBends": 4
+    },
+    "reason": "Automated gates passed, but crossings or detours still need perceptual review before claiming visual quality.",
+    "affectedRoutes": {
+      "crossings": [],
+      "detours": [
+        {
+          "relationship": {
+            "id": "builtin-mastra",
+            "from": "builtin-mcp",
+            "to": "mastra",
+            "label": "包装 agents / tools",
+            "collectionIndex": 5,
+            "artifactIndex": 6
+          },
+          "bends": 3,
+          "stretch": 1
+        },
+        {
+          "relationship": {
+            "id": "loop-workflows",
+            "from": "loop",
+            "to": "workflows",
+            "label": "durable 执行",
+            "collectionIndex": 11,
+            "artifactIndex": 12
+          },
+          "bends": 4,
+          "stretch": 1
+        },
+        {
+          "relationship": {
+            "id": "workflows-storage",
+            "from": "workflows",
+            "to": "storage",
+            "label": "挂起 / 恢复",
+            "collectionIndex": 13,
+            "artifactIndex": 14
+          },
+          "bends": 4,
+          "stretch": 1
+        },
+        {
+          "relationship": {
+            "id": "server-obs",
+            "from": "server",
+            "to": "observability",
+            "label": "查询 /observability",
+            "collectionIndex": 19,
+            "artifactIndex": 20
+          },
+          "bends": 4,
+          "stretch": 1.241
+        }
+      ],
+      "truncated": false
+    },
+    "hints": [
+      "builtin-mcp → mastra needs 3 bends: move node builtin-mcp or mastra so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "loop → workflows needs 4 bends: move node loop or workflows so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "workflows → storage needs 4 bends: move node workflows or storage so they share a row or column with matching centers, or sit diagonally with a clear corner.",
+      "server → observability needs 4 bends: move node server or observability so they share a row or column with matching centers, or sit diagonally with a clear corner."
+    ],
+    "repair": "Trace these relationships at the desktop viewport. For Architecture, use references/architecture-layout-repair.md: reflow a blocked main path or tangled connected scene, and repair an isolated defect locally only when the surrounding composition is accepted. Preserve all semantic content and user-fixed geometry. Rerun finalize once after the edit."
+  }
+}

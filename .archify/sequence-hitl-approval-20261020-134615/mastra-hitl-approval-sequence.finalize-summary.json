@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "sequence",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\code\\mastra\\.archify\\sequence-hitl-approval-20261020-134615\\candidate.json",
+    "sha256": "38796efb3cd00f26c835de3534c812e38c4fc78321c19b0f31c94eea554d2bab",
+    "bytes": 4787
+  },
+  "artifact": {
+    "path": "D:\\code\\mastra\\.archify\\sequence-hitl-approval-20261020-134615\\mastra-hitl-approval-sequence.html",
+    "sha256": "6ed8965fd32e765f15072dba4af9913aa75dfcd0043b6bc73ea63ec667a61b99",
+    "bytes": 820401
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\code\\mastra\\.archify\\sequence-hitl-approval-20261020-134615\\mastra-hitl-approval-sequence.finalize.json",
+    "summaryReceipt": "D:\\code\\mastra\\.archify\\sequence-hitl-approval-20261020-134615\\mastra-hitl-approval-sequence.finalize-summary.json",
+    "browserCheckReceipt": "D:\\code\\mastra\\.archify\\sequence-hitl-approval-20261020-134615\\mastra-hitl-approval-sequence.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-20T03:15:06.258Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6478,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

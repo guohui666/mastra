@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "feeb1b07-1773-4ae2-9749-29042606d82e",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "D:\\code\\mastra\\.archify\\workflow-tool-call-loop-20261020-110152\\candidate.json",
+  "output": "D:\\code\\mastra\\.archify\\workflow-tool-call-loop-20261020-110152\\mastra-tool-call-loop.html",
+  "specification": {
+    "sha256": "6cc8f7d8ebbde794535984d7839923cf73771bd5dc7bd52466803ca0b8b9f843",
+    "bytes": 6290
+  },
+  "artifact": {
+    "sha256": "9b6ce21c16dfffadae25372e99b84fcc88d4f7486ec884f22132a853e86249c9",
+    "bytes": 830266
+  }
+}

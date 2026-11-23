@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Mastra Agent 请求时序",
+    "locale": "zh-CN",
+    "output": ".archify/sequence-agent-request-20261020-110152/mastra-agent-request-sequence.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra",
+      "provider": "github",
+      "revision": "8271439b491f5f777590abfda9a0ac7f1e3212c2"
+    }
+  },
+  "participants": [
+    { "id": "client", "type": "frontend", "label": "Client", "sublabel": "client-js + useChat", "sources": [{ "path": "client-sdks/client-js/src/resources/agent.ts", "line": 2800, "label": "agent.stream()" }] },
+    { "id": "server", "type": "backend", "label": "@mastra/server", "sublabel": "/agents/:id/stream", "sources": [{ "path": "packages/server/src/server/handlers/agents.ts", "line": 1873, "label": "STREAM_GENERATE_ROUTE" }, { "path": "server-adapters/hono/src/index.ts", "line": 219, "label": "Hono SSE 响应头" }] },
+    { "id": "agent", "type": "backend", "label": "Agent", "sublabel": "stream() → #execute()", "sources": [{ "path": "packages/core/src/agent/agent.ts", "line": 10205, "label": "Agent.stream()" }] },
+    { "id": "memory", "type": "database", "label": "Memory Processors", "sublabel": "recall processors", "sources": [{ "path": "packages/core/src/processors/memory/message-history.ts", "line": 187, "label": "processInput" }, { "path": "packages/core/src/processors/memory/message-history.ts", "line": 134, "label": "storage.listMessages" }] },
+    { "id": "loop", "type": "backend", "label": "Agentic Loop", "sublabel": "内部 workflow（dowhile）", "sources": [{ "path": "packages/core/src/loop/workflows/stream.ts", "line": 24, "label": "workflowLoopStream()" }, { "path": "packages/core/src/loop/loop-builder.ts", "line": 759, "label": "dowhile()" }] },
+    { "id": "llm", "type": "cloud", "label": "LLM Provider", "sublabel": "model.doStream()", "sources": [{ "path": "packages/core/src/stream/aisdk/v5/execute.ts", "line": 449, "label": "model.doStream" }] },
+    { "id": "tool", "type": "backend", "label": "Tool", "sublabel": "executeToolCall()", "sources": [{ "path": "packages/core/src/loop/shared/steps/execute-tool-core.ts", "line": 43, "label": "executeToolCall()" }, { "path": "packages/core/src/loop/shared/steps/execute-tool-core.ts", "line": 77, "label": "tool.execute()" }] }
+  ],
+  "segments": [
+    { "from": 150, "to": 392, "label": "接入与上下文" },
+    { "from": 400, "to": 750, "label": "推理与工具循环" },
+    { "from": 756, "to": 910, "label": "收尾与持久化" }
+  ],
+  "messages": [
+    { "id": "m-post", "from": "client", "to": "server", "y": 160, "label": "POST /agents/:id/stream", "variant": "emphasis", "note": "Hono 中间件注入 RequestContext；checkRouteAuth + RBAC + 线程归属校验" },
+    { "id": "m-stream-call", "from": "server", "to": "agent", "y": 230, "label": "agent.stream(messages, options)", "note": "getAgentById 解析 agent，生成 runId" },
+    { "id": "m-recall", "from": "agent", "to": "memory", "y": 290, "label": "processInput：组装上下文", "note": "MessageHistory 读 storage.listMessages；SemanticRecall 向量召回；WorkingMemory 注入系统提示" },
+    { "id": "m-recall-ret", "from": "memory", "to": "agent", "y": 385, "label": "历史消息 + 召回上下文", "variant": "return" },
+    { "id": "m-loop-start", "from": "agent", "to": "loop", "y": 415, "label": "llm.stream() → loop()", "note": "prepare-stream workflow 并行准备工具与记忆，loop 注册为内部 workflow" },
+    { "id": "m-dostream", "from": "loop", "to": "llm", "y": 485, "label": "model.doStream()", "variant": "emphasis", "note": "p-retry 重试（maxRetries 默认 2）" },
+    { "id": "m-chunks", "from": "llm", "to": "loop", "y": 540, "label": "流式 chunks：text / tool-call", "variant": "return" },
+    { "id": "m-sse", "from": "server", "to": "client", "y": 570, "label": "SSE：text-delta 实时推送", "variant": "emphasis" },
+    { "id": "m-tool-exec", "from": "loop", "to": "tool", "y": 595, "label": "tool.execute(args)", "note": "高风险工具 suspend() 等待人工批准；eager 模式边流式边执行" },
+    { "id": "m-tool-ret", "from": "tool", "to": "loop", "y": 665, "label": "tool result（结构化）", "variant": "return" },
+    { "id": "m-next-round", "from": "loop", "to": "llm", "y": 695, "label": "下一轮请求（含 tool 结果）" },
+    { "id": "m-final", "from": "llm", "to": "loop", "y": 723, "label": "最终文本流", "variant": "return", "note": "decideContinuation 判定：stopWhen 满足或步数达 maxSteps（默认 5）" },
+    { "id": "m-finish", "from": "loop", "to": "agent", "y": 795, "label": "finish chunk · fullStream", "variant": "return" },
+    { "id": "m-save", "from": "agent", "to": "memory", "y": 825, "label": "saveMessages · 工作记忆", "variant": "dashed", "note": "SaveQueueManager 分步落库；onFinish 生成线程标题" },
+    { "id": "m-close", "from": "server", "to": "client", "y": 885, "label": "流结束（finish）", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "client", "from": 155, "to": 895, "type": "frontend" },
+    { "participant": "server", "from": 165, "to": 892, "type": "backend" },
+    { "participant": "agent", "from": 235, "to": 850, "type": "backend" },
+    { "participant": "memory", "from": 295, "to": 375, "type": "database" },
+    { "participant": "memory", "from": 818, "to": 838, "type": "database" },
+    { "participant": "loop", "from": 405, "to": 800, "type": "backend" },
+    { "participant": "llm", "from": 475, "to": 535, "type": "cloud" },
+    { "participant": "llm", "from": 698, "to": 728, "type": "cloud" },
+    { "participant": "tool", "from": 600, "to": 670, "type": "backend" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "关键机制",
+      "items": [
+        "Agent.stream() 先跑 prepare-stream workflow，并行准备工具与记忆上下文",
+        "agentic loop 编译为内部 workflow，dowhile 迭代直到 stopWhen / maxSteps"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "记忆",
+      "items": [
+        "输入 processors 负责回忆：历史 + 语义召回 + 工作记忆",
+        "运行中 SaveQueueManager 分步落库，onFinish 补写线程标题"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "工具与审批",
+      "items": [
+        "工具结果写回 MessageList，进入下一轮 prompt",
+        "高风险工具可 suspend()，等客户端批准后 resume"
+      ]
+    }
+  ]
+}

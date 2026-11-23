@@ -1,0 +1,288 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Mastra Agent 框架总览",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/architecture-mastra-framework-20261024-120117/mastra-framework.html",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra.git",
+      "provider": "github",
+      "revision": "cabb887412edb3114c1349806450376835b5dd19"
+    },
+    "views": [
+      {
+        "id": "exec-path",
+        "label": "Agent 执行路径",
+        "focus": ["app", "mastra", "agent", "loop", "llm", "providers", "tools", "memory", "workflows"],
+        "note": "generate/stream 到模型、工具与存储的运行链"
+      },
+      {
+        "id": "dev-deploy",
+        "label": "开发与部署",
+        "focus": ["app", "cli", "deployer", "server", "studio"],
+        "note": "mastra dev 起本地 server 与部署链路"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "app",
+      "type": "external",
+      "label": "开发者 / 应用代码",
+      "sublabel": "TypeScript 项目",
+      "pos": [40, 40],
+      "size": [170, 64],
+      "sources": [
+        { "path": "README.md", "line": 11, "label": "框架定位" }
+      ]
+    },
+    {
+      "id": "mastra",
+      "type": "backend",
+      "label": "Mastra 实例",
+      "sublabel": "@mastra/core 注册表",
+      "pos": [40, 170],
+      "size": [170, 72],
+      "sources": [
+        { "path": "packages/core/src/mastra/index.ts", "line": 831, "end_line": 836, "label": "Mastra 类" },
+        { "path": "packages/core/src/mastra/index.ts", "line": 1588, "end_line": 1591, "label": "构造注册" },
+        { "path": "packages/core/src/mastra/index.ts", "line": 1872, "end_line": 1874, "label": "注册 tools/agents" }
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "Agent",
+      "sublabel": "generate() / stream()",
+      "pos": [40, 310],
+      "size": [170, 72],
+      "sources": [
+        { "path": "packages/core/src/agent/agent.ts", "line": 790, "end_line": 795, "label": "Agent 类" },
+        { "path": "packages/core/src/agent/agent.ts", "line": 9571, "label": "generate 入口" },
+        { "path": "packages/core/src/agent/agent.ts", "line": 10373, "label": "stream 入口" }
+      ]
+    },
+    {
+      "id": "loop",
+      "type": "backend",
+      "label": "Agent 循环",
+      "sublabel": "workflow 驱动",
+      "pos": [40, 450],
+      "size": [170, 110],
+      "sources": [
+        { "path": "packages/core/src/loop/loop.ts", "line": 15, "end_line": 19, "label": "loop()" },
+        { "path": "packages/core/src/loop/loop-builder.ts", "line": 97, "end_line": 99, "label": "循环构建器" },
+        { "path": "packages/core/src/loop/workflows/stream.ts", "line": 24, "end_line": 28, "label": "workflow 循环流" }
+      ]
+    },
+    {
+      "id": "llm",
+      "type": "backend",
+      "label": "LLM 模型路由",
+      "sublabel": "MastraLLMVNext",
+      "pos": [40, 640],
+      "size": [170, 72],
+      "sources": [
+        { "path": "packages/core/src/llm/model/model.loop.ts", "line": 27, "end_line": 29, "label": "LLM 封装" },
+        { "path": "packages/core/src/llm/model/model.loop.ts", "line": 415, "end_line": 417, "label": "调 loop()" },
+        { "path": "packages/core/src/stream/aisdk/v5/execute.ts", "line": 449, "end_line": 452, "label": "doStream 绑定" }
+      ]
+    },
+    {
+      "id": "providers",
+      "type": "external",
+      "label": "模型提供商",
+      "sublabel": "OpenAI / Anthropic / …",
+      "pos": [40, 790],
+      "size": [170, 64],
+      "sources": [
+        { "path": "README.md", "line": 21, "label": "40+ 提供商" },
+        { "path": "packages/core/src/llm/model/router.ts", "line": 111, "label": "ModelRouter" }
+      ]
+    },
+    {
+      "id": "tools",
+      "type": "backend",
+      "label": "工具 Tool",
+      "sublabel": "Zod schema 出入参",
+      "pos": [390, 360],
+      "size": [180, 64],
+      "sources": [
+        { "path": "packages/core/src/tools/tool.ts", "line": 193, "end_line": 196, "label": "Tool 类" },
+        { "path": "packages/core/src/loop/shared/steps/execute-tool-core.ts", "line": 43, "end_line": 46, "label": "executeToolCall" },
+        { "path": "packages/core/src/loop/workflows/agentic-execution/tool-call-step.ts", "line": 1423, "end_line": 1426, "label": "工具调用步骤" }
+      ]
+    },
+    {
+      "id": "workflows",
+      "type": "backend",
+      "label": "Workflow 引擎",
+      "sublabel": "durable 步骤",
+      "pos": [390, 450],
+      "size": [180, 64],
+      "sources": [
+        { "path": "packages/core/src/workflows/execution-engine.ts", "line": 84, "label": "ExecutionEngine" },
+        { "path": "packages/core/src/workflows/create.ts", "line": 51, "label": "createWorkflow" }
+      ]
+    },
+    {
+      "id": "memory",
+      "type": "backend",
+      "label": "Memory",
+      "sublabel": "@mastra/memory",
+      "pos": [390, 540],
+      "size": [180, 64],
+      "sources": [
+        { "path": "packages/core/src/memory/memory.ts", "line": 124, "end_line": 126, "label": "MastraMemory 基类" },
+        { "path": "packages/memory/src/index.ts", "line": 11, "end_line": 17, "label": "实现包导入" },
+        { "path": "packages/core/src/agent/agent.ts", "line": 2793, "label": "运行期读取" }
+      ]
+    },
+    {
+      "id": "storage",
+      "type": "database",
+      "label": "存储 Storage",
+      "sublabel": "InMemory / Filesystem",
+      "pos": [690, 420],
+      "size": [180, 90],
+      "sources": [
+        { "path": "packages/core/src/storage/base.ts", "line": 764, "label": "MastraStorage" },
+        { "path": "packages/core/src/storage/base.ts", "line": 396, "end_line": 398, "label": "CompositeStore" },
+        { "path": "packages/core/src/storage/filesystem.ts", "line": 44, "end_line": 46, "label": "FilesystemStore" }
+      ]
+    },
+    {
+      "id": "db",
+      "type": "external",
+      "label": "数据库 / 向量库",
+      "sublabel": "独立适配器包",
+      "pos": [690, 600],
+      "size": [180, 64]
+    },
+    {
+      "id": "mcp",
+      "type": "external",
+      "label": "MCP 服务器",
+      "sublabel": "@mastra/mcp 接入",
+      "pos": [390, 40],
+      "size": [180, 64],
+      "sources": [
+        { "path": "packages/mcp/src/client/client.ts", "line": 401, "label": "MCP 客户端" },
+        { "path": "packages/mcp/package.json", "line": 2, "label": "@mastra/mcp" }
+      ]
+    },
+    {
+      "id": "cli",
+      "type": "backend",
+      "label": "mastra CLI",
+      "sublabel": "dev / build / deploy",
+      "pos": [975, 40],
+      "size": [190, 64],
+      "sources": [
+        { "path": "packages/cli/src/commands/dev/dev.ts", "line": 515, "end_line": 518, "label": "端口 4111 起" },
+        { "path": "packages/cli/src/commands/actions/start-dev-server.ts", "line": 19, "end_line": 21, "label": "startDevServer" }
+      ]
+    },
+    {
+      "id": "deployer",
+      "type": "backend",
+      "label": "@mastra/deployer",
+      "sublabel": "rollup + Hono server",
+      "pos": [975, 170],
+      "size": [190, 72],
+      "sources": [
+        { "path": "packages/deployer/src/server/index.ts", "line": 129, "end_line": 131, "label": "createHonoServer" },
+        { "path": "packages/deployer/src/server/index.ts", "line": 53, "end_line": 54, "label": "studio 路径" },
+        { "path": "packages/deployer/src/bundler/index.ts", "line": 7, "end_line": 10, "label": "rollup 打包" }
+      ]
+    },
+    {
+      "id": "server",
+      "type": "backend",
+      "label": "@mastra/server",
+      "sublabel": "API handlers",
+      "pos": [975, 310],
+      "size": [190, 64],
+      "sources": [
+        { "path": "packages/server/src/server/server-adapter/index.ts", "line": 10, "end_line": 12, "label": "Hono 适配" }
+      ]
+    },
+    {
+      "id": "studio",
+      "type": "frontend",
+      "label": "Studio / Playground",
+      "sublabel": "@mastra/playground-ui",
+      "pos": [975, 450],
+      "size": [190, 64],
+      "sources": [
+        { "path": "packages/playground/src/exports.ts", "line": 1, "end_line": 3, "label": "Studio 组件源" },
+        { "path": "packages/playground-ui/package.json", "line": 2, "label": "设计系统包" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "HTTP 服务与部署",
+      "wraps": ["deployer", "server", "studio"]
+    }
+  ],
+  "connections": [
+    { "id": "app-mastra", "from": "app", "to": "mastra", "label": "import { Mastra }", "variant": "emphasis" },
+    { "id": "mastra-agent", "from": "mastra", "to": "agent", "label": "注册与获取", "variant": "emphasis" },
+    { "id": "agent-loop", "from": "agent", "to": "loop", "label": "启动循环", "variant": "emphasis" },
+    { "id": "loop-llm", "from": "loop", "to": "llm", "label": "模型推理", "variant": "emphasis" },
+    { "id": "llm-providers", "from": "llm", "to": "providers", "label": "doStream / doGenerate", "variant": "emphasis" },
+    { "id": "loop-tools", "from": "loop", "to": "tools", "label": "工具调用" },
+    { "id": "loop-workflows", "from": "loop", "to": "workflows", "label": "durable 执行" },
+    { "id": "loop-memory", "from": "loop", "to": "memory", "label": "历史与召回" },
+    { "id": "workflows-storage", "from": "workflows", "to": "storage", "label": "挂起 / 恢复" },
+    { "id": "memory-storage", "from": "memory", "to": "storage", "label": "持久化消息", "fromSide": "right", "toSide": "bottom", "labelAt": [660, 572] },
+    { "id": "storage-db", "from": "storage", "to": "db", "label": "读写" },
+    { "id": "mcp-tools", "from": "mcp", "to": "tools", "label": "MCP 工具接入", "variant": "dashed" },
+    { "id": "app-cli", "from": "app", "to": "cli", "label": "npx mastra dev", "fromSide": "top", "toSide": "top" },
+    { "id": "cli-deployer", "from": "cli", "to": "deployer", "label": "DevBundler + 子进程" },
+    { "id": "deployer-server", "from": "deployer", "to": "server", "label": "createHonoServer" },
+    { "id": "server-studio", "from": "server", "to": "studio", "label": "dev 托管 UI" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "执行内核（@mastra/core）",
+      "items": [
+        "Mastra 类是中央注册表：agents、tools、workflows、storage、memory 在构造时注册",
+        "Agent.generate/stream 进入 loop()，循环步骤以 durable workflow 执行",
+        "MastraLLMVNext 经 ModelRouter 连 40+ 模型提供商"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "HTTP 与部署",
+      "items": [
+        "@mastra/deployer 用 rollup 打包，createHonoServer 挂载 @mastra/server 的 handlers",
+        "mastra dev 起子进程跑 Hono server，默认端口 4111",
+        "dev 模式下 server 托管 Studio（@internal/playground）"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "更多核心能力",
+      "items": [
+        "processors 输入/输出处理器、scorers 评分、observability/telemetry 可观测性",
+        "voice/TTS 语音、schedules 定时、knowledge 知识库、datasets 数据集",
+        "a2a 互操作、agent-builder 生成资产、coding-agent（mastra code）、harness/agent-controller"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "周边生态（独立包）",
+      "items": [
+        "@mastra/rag（分块/重排/图检索）、@mastra/evals（评分）、@mastra/loggers、@mastra/auth、@mastra/schema-compat",
+        "create-mastra 脚手架、@mastra/codemod 升级、@mastra/mcp-docs-server 文档服务",
+        "数据库/向量适配器独立发布（@mastra/libsql 等），仓库内仅内置 InMemory 与 Filesystem"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "Mastra 人工审批往返（HITL）",
+    "locale": "zh-CN",
+    "output": ".archify/sequence-hitl-approval-20261020-134615/mastra-hitl-approval-sequence.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra",
+      "provider": "github",
+      "revision": "8271439b491f5f777590abfda9a0ac7f1e3212c2"
+    }
+  },
+  "participants": [
+    { "id": "user", "type": "external", "label": "用户", "sublabel": "批准 / 拒绝", "icon": "person" },
+    { "id": "client", "type": "frontend", "label": "Client", "sublabel": "client-js", "sources": [{ "path": "client-sdks/client-js/src/resources/agent.ts", "line": 3037, "label": "approveToolCall()" }] },
+    { "id": "server", "type": "backend", "label": "@mastra/server", "sublabel": "/approve-tool-call", "sources": [{ "path": "packages/server/src/server/handlers/agents.ts", "line": 2778, "label": "审批路由" }, { "path": "packages/server/src/server/handlers/agents.ts", "line": 2818, "label": "agent.approveToolCall()" }] },
+    { "id": "run", "type": "backend", "label": "Agent Run", "sublabel": "suspend / resume", "sources": [{ "path": "packages/core/src/loop/workflows/agentic-execution/tool-call-step.ts", "line": 612, "label": "suspend()" }, { "path": "packages/core/src/agent/agent.ts", "line": 10998, "label": "approveToolCall()" }] },
+    { "id": "storage", "type": "database", "label": "Run Snapshot", "sublabel": "workflows store", "sources": [{ "path": "packages/core/src/workflows/workflow.ts", "line": 3030, "label": "初始快照 pending" }, { "path": "packages/core/src/loop/workflows/stream.ts", "line": 367, "label": "终态删快照" }] }
+  ],
+  "segments": [
+    { "from": 150, "to": 320, "label": "执行到审批点" },
+    { "from": 324, "to": 478, "label": "挂起与人工决策" },
+    { "from": 478, "to": 690, "label": "恢复与收尾" }
+  ],
+  "messages": [
+    { "id": "h-ask", "from": "user", "to": "client", "y": 160, "label": "发起对话" },
+    { "id": "h-stream", "from": "client", "to": "server", "y": 190, "label": "POST /agents/:id/stream", "variant": "emphasis", "note": "循环执行到 tool-call-step" },
+    { "id": "h-chunk", "from": "server", "to": "client", "y": 245, "label": "SSE：tool-call-approval chunk", "variant": "emphasis", "note": "chunk 带 runId + toolCallId + 工具参数" },
+    { "id": "h-show", "from": "client", "to": "user", "y": 300, "label": "展示审批请求" },
+    { "id": "h-suspend", "from": "run", "to": "storage", "y": 330, "label": "suspend()：写入快照", "variant": "dashed", "note": "status: suspended；快照含 resume 数据" },
+    { "id": "h-approve", "from": "user", "to": "client", "y": 385, "label": "批准" },
+    { "id": "h-post", "from": "client", "to": "server", "y": 418, "label": "POST /approve-tool-call", "variant": "emphasis", "note": "body 带 runId + toolCallId；拒绝走 /decline-tool-call" },
+    { "id": "h-resume", "from": "server", "to": "run", "y": 485, "label": "agent.approveToolCall()" },
+    { "id": "h-readsnap", "from": "run", "to": "storage", "y": 518, "label": "读快照 · 恢复执行" },
+    { "id": "h-cont", "from": "server", "to": "client", "y": 550, "label": "恢复后的流：tool-result · 文本", "variant": "emphasis" },
+    { "id": "h-del", "from": "run", "to": "storage", "y": 582, "label": "终态：删除快照", "variant": "dashed", "note": "成功 / 失败都删" },
+    { "id": "h-finish", "from": "server", "to": "client", "y": 636, "label": "finish（流结束）", "variant": "return" },
+    { "id": "h-answer", "from": "client", "to": "user", "y": 668, "label": "展示结果", "variant": "return" }
+  ],
+  "activations": [
+    { "participant": "client", "from": 155, "to": 675, "type": "frontend" },
+    { "participant": "server", "from": 195, "to": 640, "type": "backend" },
+    { "participant": "run", "from": 200, "to": 620, "type": "backend" },
+    { "participant": "storage", "from": 325, "to": 352, "type": "database" },
+    { "participant": "storage", "from": 513, "to": 538, "type": "database" },
+    { "participant": "storage", "from": 577, "to": 600, "type": "database" }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "审批入口",
+      "items": [
+        "approve / decline / send-tool-approval 三个 HTTP 入口",
+        "重启后可从 GET /suspended-runs 找回挂起的 run",
+        "线程归属校验防止越权审批"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "挂起与恢复",
+      "items": [
+        "suspend() 持久化快照（status: suspended）",
+        "approveToolCall() 内部 run.resume() 继续执行",
+        "终态删除快照，挂起期保留 run 注册"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Mastra 框架架构总览",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-mastra-framework-20261020-110152/mastra-framework-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra",
+      "provider": "github",
+      "revision": "8271439b491f5f777590abfda9a0ac7f1e3212c2"
+    }
+  },
+  "components": [
+    { "id": "dev", "type": "external", "label": "开发者", "sublabel": "写 agents / workflows 代码", "icon": "person", "pos": [40, 260], "size": [110, 64] },
+    { "id": "cli", "type": "backend", "label": "Mastra CLI", "sublabel": "dev · studio · deploy", "pos": [230, 260], "size": [140, 64], "sources": [{ "path": "packages/cli/src/index.ts", "line": 129, "label": "dev 命令注册" }] },
+    { "id": "studio", "type": "frontend", "label": "Studio（Playground）", "sublabel": "本地调试 UI", "pos": [230, 90], "size": [150, 60], "sources": [{ "path": "packages/playground/package.json", "line": 2, "label": "@internal/playground" }] },
+    { "id": "clientjs", "type": "frontend", "label": "@mastra/client-js", "sublabel": "Client API SDK · React hooks", "pos": [450, 90], "size": [170, 60], "sources": [{ "path": "client-sdks/client-js/package.json", "line": 2 }, { "path": "client-sdks/client-js/package.json", "line": 4 }] },
+    { "id": "server", "type": "backend", "label": "@mastra/server", "sublabel": "SERVER_ROUTES → /api", "tag": "hono · express · next", "pos": [460, 260], "size": [150, 64], "sources": [{ "path": "packages/server/src/server/server-adapter/routes/index.ts", "line": 165, "label": "SERVER_ROUTES" }, { "path": "packages/server/src/server/server-adapter/index.ts", "line": 1327, "label": "registerRoutes()" }] },
+    { "id": "mastra", "type": "backend", "label": "Mastra 容器", "sublabel": "注册 · 依赖注入", "pos": [700, 260], "size": [140, 64], "sources": [{ "path": "packages/core/src/mastra/index.ts", "line": 831, "label": "class Mastra" }] },
+    { "id": "agent", "type": "backend", "label": "Agent + Loop", "sublabel": "loop() 多轮推理", "pos": [890, 260], "size": [130, 64], "sources": [{ "path": "packages/core/src/agent/agent.ts", "line": 783, "label": "class Agent" }, { "path": "packages/core/src/loop/loop.ts", "line": 15, "label": "loop()" }] },
+    { "id": "llm", "type": "cloud", "label": "LLM Providers", "sublabel": "OpenAI · Anthropic · Google", "pos": [1130, 260], "size": [150, 64], "sources": [{ "path": "packages/core/src/llm/model/router.ts", "line": 111, "label": "ModelRouterLanguageModel" }] },
+    { "id": "workflow", "type": "backend", "label": "Workflow 引擎", "sublabel": "Workflow · Run · suspend/resume", "pos": [700, 430], "size": [150, 60], "sources": [{ "path": "packages/core/src/workflows/workflow.ts", "line": 1828, "label": "class Workflow" }, { "path": "packages/core/src/workflows/workflow.ts", "line": 3732, "label": "class Run" }] },
+    { "id": "tools", "type": "backend", "label": "Tools", "sublabel": "createTool · MCP 工具", "pos": [890, 430], "size": [130, 60], "sources": [{ "path": "packages/core/src/tools/tool.ts", "line": 750, "label": "createTool()" }, { "path": "packages/core/src/tools/tool.ts", "line": 193, "label": "class Tool" }] },
+    { "id": "memory", "type": "backend", "label": "Memory", "sublabel": "@mastra/memory · 语义/工作记忆", "pos": [1090, 430], "size": [170, 60], "sources": [{ "path": "packages/core/src/memory/memory.ts", "line": 123, "label": "MastraMemory 契约" }, { "path": "packages/memory/src/index.ts", "line": 455, "label": "class Memory" }] },
+    { "id": "storage", "type": "database", "label": "存储适配器 stores/*", "sublabel": "LibSQL · PG · Redis · 向量库", "pos": [890, 600], "size": [160, 64], "sources": [{ "path": "packages/core/src/storage/base.ts", "line": 396, "label": "MastraCompositeStore" }, { "path": "packages/core/src/storage/base.ts", "line": 764, "label": "MastraStorage" }] },
+    { "id": "deployer", "type": "backend", "label": "@mastra/deployer", "sublabel": "构建 Vercel / Cloudflare 包", "pos": [230, 600], "size": [150, 60], "sources": [{ "path": "packages/deployer/src/index.ts", "line": 4, "label": "getDeployer()" }] }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "@mastra/core 核心引擎", "wraps": ["mastra", "agent", "workflow", "tools"] }
+  ],
+  "connections": [
+    { "id": "dev-cli", "from": "dev", "to": "cli" },
+    { "id": "cli-server", "from": "cli", "to": "server", "label": "挂载 /api" },
+    { "id": "server-mastra", "from": "server", "to": "mastra", "label": "getAgent()" },
+    { "id": "mastra-agent", "from": "mastra", "to": "agent" },
+    { "id": "agent-llm", "from": "agent", "to": "llm", "label": "ModelRouter", "variant": "emphasis" },
+    { "id": "cli-studio", "from": "cli", "to": "studio", "label": "托管 SPA" },
+    { "id": "studio-clientjs", "from": "studio", "to": "clientjs", "label": "使用" },
+    { "id": "clientjs-server", "from": "clientjs", "to": "server", "label": "HTTP /api", "variant": "emphasis" },
+    { "id": "mastra-workflow", "from": "mastra", "to": "workflow", "label": "注册" },
+    { "id": "agent-workflow", "from": "agent", "to": "workflow", "label": "内部 workflow", "variant": "dashed" },
+    { "id": "agent-tools", "from": "agent", "to": "tools", "label": "tool call" },
+    { "id": "agent-memory", "from": "agent", "to": "memory", "label": "记忆读写" },
+    { "id": "memory-storage", "from": "memory", "to": "storage", "label": "线程与消息持久化" },
+    { "id": "workflow-storage", "from": "workflow", "to": "storage", "label": "run 状态" },
+    { "id": "cli-deployer", "from": "cli", "to": "deployer", "label": "mastra deploy" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "核心引擎（@mastra/core）",
+      "items": [
+        "Mastra 类是 DI 容器：注册 agents、workflows、tools、memory、storage",
+        "Agent 的 agentic loop 编译为内部 workflow，与用户 workflow 共用同一执行引擎",
+        "模型字符串（如 openai/gpt-5）由 ModelRouterLanguageModel 解析到具体 provider"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "接口层",
+      "items": [
+        "@mastra/server 定义框架无关路由，挂载在 /api，带鉴权与 RBAC",
+        "server-adapters 把路由适配到 hono / express / fastify / next 等框架",
+        "Studio 与外部前端都通过 @mastra/client-js 调同一套 API"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "扩展与部署",
+      "items": [
+        "@mastra/mcp：MCPClient 接入外部 MCP 工具，MCPServer 反向暴露 agents",
+        "stores/* 提供 20+ 存储与向量库适配，统一实现 MastraStorage 契约",
+        "@mastra/deployer 与 deployers/* 构建各平台的部署产物"
+      ]
+    }
+  ]
+}

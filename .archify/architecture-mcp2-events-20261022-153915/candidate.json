@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Mastra MCP 2.0 支持架构（含 Events 扩展）",
+    "locale": "zh-CN",
+    "output": ".archify/architecture-mcp2-events-20261022-153915/mastra-mcp2-events-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra",
+      "provider": "github",
+      "revision": "846639e853177c7c55f7ff6e0f27c0f54bc68562"
+    }
+  },
+  "components": [
+    { "id": "ext-servers", "type": "cloud", "label": "外部 MCP Servers", "sublabel": "协议 2.x · Events 扩展", "pos": [40, 280], "size": [140, 64], "sources": [{ "path": "packages/mcp/src/shared/events/constants.ts", "line": 8, "label": "扩展 id 定义" }, { "path": "packages/mcp/package.json", "line": 42, "label": "MCP SDK 2.3.1" }] },
+    { "id": "mcp-client", "type": "backend", "label": "MCPClient", "sublabel": "tools() · events.subscribe()", "pos": [260, 280], "size": [150, 64], "sources": [{ "path": "packages/mcp/src/client/configuration.ts", "line": 116, "label": "class MCPClient" }, { "path": "packages/mcp/src/client/client.ts", "line": 1605, "label": "tools()" }, { "path": "packages/mcp/src/client/actions/events.ts", "line": 101, "label": "events.subscribe()" }] },
+    { "id": "agent", "type": "backend", "label": "Agent / Thread", "sublabel": "toolsets + 事件通知", "pos": [490, 280], "size": [140, 64], "sources": [{ "path": "packages/core/src/agent/agent.ts", "line": 790, "label": "class Agent" }] },
+    { "id": "signal", "type": "backend", "label": "MCPEventsSignalProvider", "sublabel": "事件 → 线程通知", "tag": "experimental", "pos": [260, 440], "size": [180, 60], "sources": [{ "path": "packages/mcp/src/integrations/events-signals.ts", "line": 88, "label": "class MCPEventsSignalProvider" }, { "path": "packages/core/src/signals/signal-provider.ts", "line": 97, "label": "SignalProvider 基类" }] },
+    { "id": "mcp-server", "type": "backend", "label": "MCPServer", "sublabel": "events · streamable HTTP", "pos": [710, 280], "size": [160, 64], "sources": [{ "path": "packages/mcp/src/server/server.ts", "line": 180, "label": "class MCPServer" }, { "path": "packages/mcp/src/server/server.ts", "line": 109, "label": "events 配置" }, { "path": "packages/mcp/src/server/events/registry.ts", "line": 58, "label": "ServerEventRegistry" }] },
+    { "id": "ext-clients", "type": "external", "label": "MCP 客户端", "sublabel": "外部消费者", "pos": [960, 280], "size": [130, 64] },
+    { "id": "webhook", "type": "messagebus", "label": "Webhook 端点", "sublabel": "事件投递目标", "tag": "experimental", "pos": [960, 440], "size": [130, 60], "sources": [{ "path": "packages/mcp/src/server/events/webhook-dispatcher.ts", "line": 150, "label": "WebhookDispatcher" }, { "path": "packages/mcp/src/shared/events/constants.ts", "line": 30, "label": "poll/push/webhook" }] },
+    { "id": "routes", "type": "backend", "label": "@mastra/server /mcp/*", "sublabel": "tools · resources · events", "pos": [710, 120], "size": [170, 60], "sources": [{ "path": "packages/server/src/server/handlers/mcp.ts", "line": 188, "label": "tools 路由" }, { "path": "packages/server/src/server/handlers/mcp.ts", "line": 454, "label": "events 路由" }] },
+    { "id": "studio", "type": "frontend", "label": "Studio", "sublabel": "MCP events 页面", "pos": [490, 120], "size": [140, 60], "sources": [{ "path": "packages/playground/src/domains/mcps/hooks/use-mcp-server-events.ts", "line": 6, "label": "useMcpServerEvents" }] }
+  ],
+  "connections": [
+    { "id": "c-call", "from": "mcp-client", "to": "ext-servers", "label": "tools()" },
+    { "id": "c-events-in", "from": "ext-servers", "to": "mcp-client", "label": "事件投递" },
+    { "id": "c-toolsets", "from": "mcp-client", "to": "agent", "label": "toolsets" },
+    { "id": "c-register", "from": "agent", "to": "mcp-server", "label": "注册工具" },
+    { "id": "c-serve", "from": "mcp-server", "to": "ext-clients", "label": "MCP 服务" },
+    { "id": "c-subscribe", "from": "mcp-client", "to": "signal", "label": "订阅事件" },
+    { "id": "c-notify", "from": "signal", "to": "agent", "label": "线程通知" },
+    { "id": "c-crud", "from": "routes", "to": "mcp-server", "label": "events CRUD" },
+    { "id": "c-manage", "from": "studio", "to": "routes", "label": "事件管理" },
+    { "id": "c-webhook", "from": "mcp-server", "to": "webhook", "label": "webhook 投递" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "MCP 2.x 基座",
+      "items": [
+        "@mastra/mcp 2.5.0 构建在 @modelcontextprotocol 2.3.1 之上",
+        "客户端与 server 协商协议版本（legacy / auto / pin）",
+        "OAuth 双侧支持：客户端 oauth-provider，服务端 oauth-middleware"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Events 扩展（SEP-3415）",
+      "items": [
+        "扩展 id io.modelcontextprotocol/events，wire 契约在 shared/events",
+        "订阅可选 poll / push / webhook 三种投递，webhook 被拒时自动降级",
+        "MCPServer 侧：事件注册表 + ring buffer + 流式推送 + WebhookDispatcher"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "接入面",
+      "items": [
+        "HTTP：/mcp/:serverId/tools · /resources · /events，另有 /mcp/v0/servers 管理",
+        "MCPEventsSignalProvider 把事件送进 agent 线程（experimental）",
+        "Studio 的 MCP 页面可查看事件流并手动触发测试"
+      ]
+    }
+  ]
+}

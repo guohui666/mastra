@@ -1,0 +1,60 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "Mastra Run 挂起与恢复状态机",
+    "locale": "zh-CN",
+    "output": ".archify/lifecycle-suspend-resume-20261020-134615/mastra-suspend-resume-lifecycle.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra",
+      "provider": "github",
+      "revision": "8271439b491f5f777590abfda9a0ac7f1e3212c2"
+    }
+  },
+  "mainPath": ["pending", "running", "success"],
+  "states": [
+    { "id": "pending", "type": "start", "label": "Pending", "sublabel": "初始快照写入", "step": "01", "sources": [{ "path": "packages/core/src/workflows/workflow.ts", "line": 3030, "label": "status: pending" }] },
+    { "id": "running", "type": "active", "label": "Running", "sublabel": "执行 step / agentic loop", "step": "02", "sources": [{ "path": "packages/core/src/workflows/workflow.ts", "line": 5041, "label": "status: running" }] },
+    { "id": "suspended", "type": "waiting", "label": "Suspended", "sublabel": "等审批或外部输入", "tag": "快照已持久化", "sources": [{ "path": "packages/core/src/workflows/default.ts", "line": 640, "label": "suspended 分支" }, { "path": "packages/core/src/loop/workflows/agentic-execution/tool-call-step.ts", "line": 612, "label": "suspend()" }] },
+    { "id": "success", "type": "success", "label": "Success", "sublabel": "输出完成", "tag": "快照删除", "step": "03", "sources": [{ "path": "packages/core/src/workflows/workflow.ts", "line": 5564, "label": "status: success" }, { "path": "packages/core/src/loop/workflows/stream.ts", "line": 367, "label": "终态删快照" }] },
+    { "id": "failed", "type": "failure", "label": "Failed", "sublabel": "step 抛错", "tag": "终态", "sources": [{ "path": "packages/core/src/workflows/workflow.ts", "line": 5574, "label": "status: failed" }] }
+  ],
+  "transitions": [
+    { "id": "t-start", "from": "pending", "to": "running", "label": "start()" },
+    { "id": "t-done", "from": "running", "to": "success", "label": "全部 step 完成" },
+    { "id": "t-suspend", "from": "running", "to": "suspended", "label": "suspend()：审批 / 等输入", "variant": "security" },
+    { "id": "t-resume", "from": "suspended", "to": "running", "label": "resume", "variant": "emphasis" },
+    { "id": "t-fail", "from": "running", "to": "failed", "label": "step 抛错" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "挂起（Suspend）",
+      "items": [
+        "step 内调 suspend()，run 状态写为 suspended",
+        "快照（含 resume 数据）持久化到 workflows store",
+        "服务器重启后，running 快照若含挂起 step 会回退为 suspended（/agents/:id/recover 恢复）",
+        "GET /suspended-runs 列出挂起的 run，重启后仍可见"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "恢复（Resume）",
+      "items": [
+        "Agent：approveToolCall / declineToolCall / sendToolApproval / resumeStream",
+        "Workflow：Run.resume({ label, resumeData }) 按 resumeLabels 定位",
+        "恢复后从挂起的 step 继续，不重跑已完成的 step"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "终态",
+      "items": [
+        "成功或失败后删除 agentic-loop 快照，避免悬挂记录",
+        "挂起期间保留 run 注册，供同 runId 恢复",
+        "failed 快照带 error，可序列化返回给调用方"
+      ]
+    }
+  ]
+}

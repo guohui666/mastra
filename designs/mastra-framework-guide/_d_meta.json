@@ -1,0 +1,33 @@
+{
+  "type": "design",
+  "designSystems": [],
+  "primaryDesignSystem": null,
+  "assets": {
+    "Mastra 框架学习指南": {
+      "versions": [
+        {
+          "path": "Mastra 框架学习指南.html",
+          "createdAt": "2026-10-20T03:14:27.283Z",
+          "status": "needs-review",
+          "subtitle": "依据仓库源码和文档的学习长文",
+          "viewport": {
+            "width": 794,
+            "height": 1123
+          }
+        },
+        {
+          "path": "Mastra 框架学习指南 v2.html",
+          "createdAt": "2026-10-20T03:21:29.198Z",
+          "status": "needs-review",
+          "subtitle": "屏幕阅读版，不是打印纸",
+          "viewport": {
+            "width": 1440,
+            "height": 900
+          }
+        }
+      ]
+    }
+  },
+  "createdAt": "2026-10-20T03:14:27.286Z",
+  "updatedAt": "2026-10-20T03:21:29.200Z"
+}

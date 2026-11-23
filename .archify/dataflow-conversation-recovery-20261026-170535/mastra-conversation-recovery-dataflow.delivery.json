@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "8151af84-a195-4ab0-93f4-54fbf0b13324",
+  "status": "current",
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "D:\\code\\mastra\\.archify\\dataflow-conversation-recovery-20261026-170535\\candidate.json",
+  "output": "D:\\code\\mastra\\.archify\\dataflow-conversation-recovery-20261026-170535\\mastra-conversation-recovery-dataflow.html",
+  "specification": {
+    "sha256": "dfc4f3fecc69d55c2cb1eb567a87491e58c7d66307a768e666bd713b667ffd8e",
+    "bytes": 6773
+  },
+  "artifact": {
+    "sha256": "01235ca3370da06d78f37d816e6cbb42f54b702193fb7a546f39c4a41c9e7697",
+    "bytes": 850627
+  }
+}

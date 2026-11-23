@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "518830d6-c08d-49c3-9649-7398fbbdab1b",
+  "status": "current",
+  "command": "deliver",
+  "type": "lifecycle",
+  "input": "D:\\code\\mastra\\.archify\\lifecycle-suspend-resume-20261020-134615\\candidate.json",
+  "output": "D:\\code\\mastra\\.archify\\lifecycle-suspend-resume-20261020-134615\\mastra-suspend-resume-lifecycle.html",
+  "specification": {
+    "sha256": "5b9241d9d2db1b0d8c9c2f6038d343f6072c76332517f23b16bd9785dfb4eb67",
+    "bytes": 3468
+  },
+  "artifact": {
+    "sha256": "1a19c8d540e1928d0c268b020646bf6dbd9d0d3731817b7e7b480bedd2496865",
+    "bytes": 814942
+  }
+}

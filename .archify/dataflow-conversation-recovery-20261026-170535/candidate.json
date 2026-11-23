@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Mastra 会话持久化与恢复数据流",
+    "locale": "zh-CN",
+    "output": ".archify/dataflow-conversation-recovery-20261026-170535/mastra-conversation-recovery-dataflow.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra",
+      "provider": "github",
+      "revision": "846639e853177c7c55f7ff6e0f27c0f54bc68562"
+    }
+  },
+  "stages": [
+    { "label": "会话产生" },
+    { "label": "运行时" },
+    { "label": "持久层" },
+    { "label": "恢复入口" },
+    { "label": "重进与续跑" }
+  ],
+  "nodes": [
+    { "id": "client", "type": "frontend", "label": "会话客户端", "sublabel": "SSE 流式调用", "stage": 0, "row": 1, "sources": [{ "path": "packages/server/src/server/handlers/agents.ts", "line": 1873, "label": "/stream 入口" }] },
+    { "id": "agentrun", "type": "backend", "label": "Agent Run", "sublabel": "loop · 上下文组装", "stage": 1, "row": 1, "sources": [{ "path": "packages/core/src/agent/agent.ts", "line": 10364, "label": "stream()" }, { "path": "packages/core/src/processors/memory/message-history.ts", "line": 187, "label": "processInput" }, { "path": "packages/core/src/agent/agent.ts", "line": 9168, "label": "onFinish 落库" }] },
+    { "id": "savequeue", "type": "backend", "label": "SaveQueueManager", "sublabel": "按 step 落库", "stage": 1, "row": 2, "sources": [{ "path": "packages/core/src/agent/save-queue/index.ts", "line": 21, "label": "class SaveQueueManager" }, { "path": "packages/core/src/agent/save-queue/index.ts", "line": 216, "label": "flushMessages()" }, { "path": "packages/core/src/agent/save-queue/index.ts", "line": 165, "label": "memory.saveMessages" }] },
+    { "id": "snaps", "type": "database", "label": "Run 快照", "sublabel": "workflows 域存储", "tag": "挂起保留 · 终态删除", "stage": 2, "row": 1, "sources": [{ "path": "packages/core/src/storage/domains/workflows/base.ts", "line": 14, "label": "WorkflowsStorage" }, { "path": "packages/core/src/workflows/workflow.ts", "line": 3037, "label": "pending 初始快照" }] },
+    { "id": "msgs", "type": "database", "label": "threads + messages", "sublabel": "memory 域存储", "stage": 2, "row": 2, "sources": [{ "path": "packages/core/src/storage/domains/memory/base.ts", "line": 43, "label": "MemoryStorage" }, { "path": "packages/core/src/memory/memory.ts", "line": 529, "label": "saveMessages 契约" }] },
+    { "id": "subscribe", "type": "backend", "label": "threads/subscribe", "sublabel": "SSE · 连接即推", "stage": 3, "row": 0, "sources": [{ "path": "packages/server/src/server/handlers/agents.ts", "line": 2408, "label": "subscribe 路由" }] },
+    { "id": "resumeapi", "type": "backend", "label": "恢复 API", "sublabel": "approve · resumeData", "stage": 3, "row": 1, "sources": [{ "path": "packages/server/src/server/handlers/agents.ts", "line": 2918, "label": "suspended-runs" }, { "path": "packages/server/src/server/handlers/agents.ts", "line": 3037, "label": "resume-stream" }] },
+    { "id": "durable", "type": "backend", "label": "durable recover", "sublabel": "重启自动恢复", "tag": "recovery: auto", "stage": 3, "row": 2, "sources": [{ "path": "packages/core/src/agent/durable/create-durable-agent.ts", "line": 83, "label": "durableAgents: auto" }, { "path": "packages/core/src/agent/durable/create-evented-agent.ts", "line": 98, "label": "recoverActiveRuns()" }] },
+    { "id": "reentry", "type": "frontend", "label": "重进客户端", "sublabel": "重建会话 UI", "stage": 4, "row": 0, "sources": [{ "path": "packages/server/src/server/handlers/memory.ts", "line": 1083, "label": "GET threads messages" }] },
+    { "id": "resumed", "type": "backend", "label": "恢复的 Run", "sublabel": "断点续跑 · 不重跑", "stage": 4, "row": 2, "sources": [{ "path": "packages/core/src/workflows/workflow.ts", "line": 5367, "label": "suspended 快照" }, { "path": "packages/core/src/loop/workflows/stream.ts", "line": 366, "label": "终态删快照" }] }
+  ],
+  "flows": [
+    { "id": "f-msg", "from": "client", "to": "agentrun", "label": "消息 + threadId", "classification": "会话输入", "variant": "emphasis" },
+    { "id": "f-step", "from": "agentrun", "to": "savequeue", "label": "每 step 消息", "classification": "增量消息" },
+    { "id": "f-save", "from": "savequeue", "to": "msgs", "label": "saveMessages", "classification": "消息行写入", "variant": "emphasis" },
+    { "id": "f-snap", "from": "agentrun", "to": "snaps", "label": "挂起 / 终态快照", "classification": "run 状态" },
+    { "id": "f-recall", "from": "msgs", "to": "agentrun", "label": "历史 + 语义召回", "classification": "上下文重放" },
+    { "id": "f-pub", "from": "agentrun", "to": "subscribe", "label": "chunk 发布", "classification": "thread 主题" },
+    { "id": "f-sse", "from": "subscribe", "to": "reentry", "label": "SSE 实时推送", "classification": "实时 chunk" },
+    { "id": "f-pending", "from": "snaps", "to": "resumeapi", "label": "挂起 run 清单", "classification": "挂起状态" },
+    { "id": "f-approve", "from": "resumeapi", "to": "resumed", "label": "approve · resume", "classification": "恢复指令" },
+    { "id": "f-list", "from": "resumeapi", "to": "reentry", "label": "待审批清单", "classification": "挂起列表" },
+    { "id": "f-restartsnap", "from": "snaps", "to": "durable", "label": "重启后快照", "classification": "断点数据" },
+    { "id": "f-recover", "from": "durable", "to": "resumed", "label": "recover() 续跑", "classification": "断点恢复" },
+    { "id": "f-history", "from": "msgs", "to": "reentry", "label": "历史消息回放", "classification": "全量历史" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "写入路径",
+      "items": [
+        "每轮上下文从存储重放：MessageHistory + SemanticRecall + WorkingMemory",
+        "SaveQueueManager 按 step 落库，断点前的输出已经持久",
+        "onFinish 补写 response 消息并异步生成线程标题"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "重进恢复",
+      "items": [
+        "threadId 拉全量历史重建 UI（GET /memory/threads/:id/messages）",
+        "threads/subscribe 重挂流，连接即推当前状态（sseFlushOnConnect）",
+        "默认流式断连即取消（Hono abortSignal），消息已按 step 保留"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "断点续跑",
+      "items": [
+        "快照含 resume 数据，恢复从挂起 step 继续，不重跑已完成 step",
+        "durable 模式重启后 recoverActiveRuns() 自动续跑",
+        "终态删除快照，挂起期间保留"
+      ]
+    }
+  ]
+}

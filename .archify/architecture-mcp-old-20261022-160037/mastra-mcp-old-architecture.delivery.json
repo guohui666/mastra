@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "963b9a37-fe93-47d5-a7a0-6a9501dea329",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\code\\mastra\\.archify\\architecture-mcp-old-20261022-160037\\candidate.json",
+  "output": "D:\\code\\mastra\\.archify\\architecture-mcp-old-20261022-160037\\mastra-mcp-old-architecture.html",
+  "specification": {
+    "sha256": "43a42023ed6e542f101099505da3e5603b28c55d59257a1de2ece7eac9b5bb9b",
+    "bytes": 4079
+  },
+  "artifact": {
+    "sha256": "4b39ffc0cddba12763de1c6a6a6c4aa68139c3ccd618b4291c4982f4df4fee98",
+    "bytes": 821029
+  }
+}

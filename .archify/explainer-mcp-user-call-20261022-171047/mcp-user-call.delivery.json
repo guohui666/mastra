@@ -1,0 +1,43 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "81789a8e-3769-4bbc-9015-cb9eb2567c3c",
+  "status": "current",
+  "command": "deliver",
+  "type": "explainer",
+  "input": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\candidate.archify.md",
+  "output": "D:\\code\\mastra\\.archify\\explainer-mcp-user-call-20261022-171047\\mcp-user-call.html",
+  "specification": {
+    "sha256": "b48d390082ce0ab36770f74c8718f790fb60ec2ff88b3441e80840881d66e2ff",
+    "bytes": 14058
+  },
+  "artifact": {
+    "sha256": "083f9a032926bc3be4c85360dbd626ef6b0c0c466f0dae724afbacf49009b6ae",
+    "bytes": 1356518
+  },
+  "explainer": {
+    "preparedSha256": "edf691017e1719b5223e9b80b6432449923a88051bc84344811f33fcf85dd105",
+    "dependencies": [
+      {
+        "kind": "diagram-spec",
+        "id": "handle-flow",
+        "inline": true,
+        "sha256": "edfb55287023831190708bd145834ddf5c0b5fdd6429e35832a3bb2766eeb036",
+        "bytes": 1425
+      },
+      {
+        "kind": "diagram-spec",
+        "id": "old-reply-flow",
+        "inline": true,
+        "sha256": "98646c3e3ac12551b66fa96b1a38d7a8a0124fbd228dd76b3311281f3d81e642",
+        "bytes": 1347
+      },
+      {
+        "kind": "diagram-spec",
+        "id": "new-reply-flow",
+        "inline": true,
+        "sha256": "5c2d88785df159d807d9d8fee597c21bab0778a33633a27c9f8e98dfc09baf8a",
+        "bytes": 965
+      }
+    ]
+  }
+}

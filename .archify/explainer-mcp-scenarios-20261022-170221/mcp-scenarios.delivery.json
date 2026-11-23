@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "d6e3b35e-473d-425e-a96b-2fd8a39fe632",
+  "status": "current",
+  "command": "deliver",
+  "type": "explainer",
+  "input": "D:\\code\\mastra\\.archify\\explainer-mcp-scenarios-20261022-170221\\candidate.archify.md",
+  "output": "D:\\code\\mastra\\.archify\\explainer-mcp-scenarios-20261022-170221\\mcp-scenarios.html",
+  "specification": {
+    "sha256": "3a7ec76b314b31468bd718b2ae62249647912497a092ac5e3d44bdccafa7169e",
+    "bytes": 12887
+  },
+  "artifact": {
+    "sha256": "ef6ae5699d71d968701335d440c315a65084070d20c7af9e7cf11edcb1f20773",
+    "bytes": 1672685
+  },
+  "explainer": {
+    "preparedSha256": "82b99773ba54d9e198f8df8f4e6d7761852d73ae4013ab85cdad3014dbd55c9c",
+    "dependencies": [
+      {
+        "kind": "diagram-spec",
+        "id": "old-ok",
+        "inline": true,
+        "sha256": "2bafa65e95f25d07a650150d5b2b951597f37692ec266d4d4cfcda69ad294c49",
+        "bytes": 1862
+      },
+      {
+        "kind": "diagram-spec",
+        "id": "old-fail",
+        "inline": true,
+        "sha256": "54054809363ab3021ee5ef85248bdfc8bac05526f58d558a39a8e89e31897791",
+        "bytes": 1154
+      },
+      {
+        "kind": "diagram-spec",
+        "id": "new-ok",
+        "inline": true,
+        "sha256": "ea4e2721e74b0a259672949e6de7734c185aa944b1b652dd11777ee3ede498df",
+        "bytes": 1264
+      },
+      {
+        "kind": "diagram-spec",
+        "id": "new-fail",
+        "inline": true,
+        "sha256": "019b61551aee70254535df497cd35631e14f1825bc4788201cdac0d73d2224a8",
+        "bytes": 1120
+      }
+    ]
+  }
+}

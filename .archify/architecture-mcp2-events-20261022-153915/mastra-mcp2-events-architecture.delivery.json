@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "706a3243-7781-41e4-acaa-193bc56e5d1e",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "D:\\code\\mastra\\.archify\\architecture-mcp2-events-20261022-153915\\candidate.json",
+  "output": "D:\\code\\mastra\\.archify\\architecture-mcp2-events-20261022-153915\\mastra-mcp2-events-architecture.html",
+  "specification": {
+    "sha256": "ac0e0f2652e93bc7dac350c951c59ab0f887e6f0d985adac908e193f6caf5801",
+    "bytes": 5530
+  },
+  "artifact": {
+    "sha256": "ac19359b8df1dab735f8d4d22813bba8a934642152a56b3d2c9ef31f8dd2742d",
+    "bytes": 830242
+  }
+}

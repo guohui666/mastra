@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "workflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "D:\\code\\mastra\\.archify\\workflow-tool-call-loop-20261020-110152\\candidate.json",
+    "sha256": "6cc8f7d8ebbde794535984d7839923cf73771bd5dc7bd52466803ca0b8b9f843",
+    "bytes": 6290
+  },
+  "artifact": {
+    "path": "D:\\code\\mastra\\.archify\\workflow-tool-call-loop-20261020-110152\\mastra-tool-call-loop.html",
+    "sha256": "9b6ce21c16dfffadae25372e99b84fcc88d4f7486ec884f22132a853e86249c9",
+    "bytes": 830266
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "D:\\code\\mastra\\.archify\\workflow-tool-call-loop-20261020-110152\\mastra-tool-call-loop.finalize.json",
+    "summaryReceipt": "D:\\code\\mastra\\.archify\\workflow-tool-call-loop-20261020-110152\\mastra-tool-call-loop.finalize-summary.json",
+    "browserCheckReceipt": "D:\\code\\mastra\\.archify\\workflow-tool-call-loop-20261020-110152\\mastra-tool-call-loop.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-10-20T03:15:06.258Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 6042,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

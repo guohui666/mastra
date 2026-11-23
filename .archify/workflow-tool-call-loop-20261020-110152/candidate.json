@@ -1,0 +1,92 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Mastra Agent 工具调用循环",
+    "locale": "zh-CN",
+    "output": ".archify/workflow-tool-call-loop-20261020-110152/mastra-tool-call-loop.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra",
+      "provider": "github",
+      "revision": "8271439b491f5f777590abfda9a0ac7f1e3212c2"
+    }
+  },
+  "lanes": [
+    { "id": "io", "label": "用户与流" },
+    { "id": "agent", "label": "Agent 准备" },
+    { "id": "loop", "label": "Agentic Loop（内部 workflow）" },
+    { "id": "tools", "label": "工具执行" },
+    { "id": "state", "label": "审批与持久化" }
+  ],
+  "phases": [
+    { "id": "ph-prep", "label": "准备", "fromCol": 0, "toCol": 1 },
+    { "id": "ph-iterate", "label": "迭代：推理 → 工具 → 判定", "fromCol": 2, "toCol": 4, "variant": "emphasis" },
+    { "id": "ph-out", "label": "输出", "fromCol": 5, "toCol": 5 }
+  ],
+  "mainPath": ["user", "prepare", "llm", "tool", "decide", "stream"],
+  "semanticChecks": {
+    "allowedRoots": ["user"],
+    "allowedTerminals": ["stream", "memory"],
+    "requiredEdges": [
+      { "from": "llm", "to": "tool" },
+      { "from": "tool", "to": "decide" },
+      { "from": "decide", "to": "llm" },
+      { "from": "decide", "to": "stream" }
+    ],
+    "requiredPaths": [
+      { "from": "user", "to": "prepare" },
+      { "from": "prepare", "to": "llm" }
+    ]
+  },
+  "nodes": [
+    { "id": "user", "lane": "io", "col": 0, "type": "external", "label": "用户消息", "sublabel": "/agents/:id/stream", "icon": "person", "sources": [{ "path": "packages/server/src/server/handlers/agents.ts", "line": 1873, "label": "STREAM_GENERATE_ROUTE" }] },
+    { "id": "prepare", "lane": "agent", "col": 1, "type": "backend", "label": "准备（并行）", "sublabel": "convertTools · memory processors", "tag": "prepare-stream workflow", "sources": [{ "path": "packages/core/src/agent/workflows/prepare-stream/index.ts", "line": 72, "label": "createPrepareStreamWorkflow" }, { "path": "packages/core/src/agent/workflows/prepare-stream/index.ts", "line": 235, "label": "parallel([tools, memory])" }] },
+    { "id": "llm", "lane": "loop", "col": 2, "type": "backend", "label": "llm-execution", "sublabel": "model.doStream() · p-retry", "sources": [{ "path": "packages/core/src/loop/workflows/agentic-execution/llm-execution-step.ts", "line": 1293, "label": "llm-execution step" }, { "path": "packages/core/src/stream/aisdk/v5/execute.ts", "line": 449, "label": "model.doStream" }] },
+    { "id": "tool", "lane": "tools", "col": 3, "type": "backend", "label": "tool-call-step", "sublabel": "executeToolCall() · foreach 并发", "sources": [{ "path": "packages/core/src/loop/shared/steps/execute-tool-core.ts", "line": 43, "label": "executeToolCall()" }, { "path": "packages/core/src/loop/shared/steps/execute-tool-core.ts", "line": 77, "label": "tool.execute()" }] },
+    { "id": "decide", "lane": "loop", "col": 4, "type": "backend", "label": "继续判定", "sublabel": "stopWhen · maxSteps（默认 5）", "icon": "decision", "sources": [{ "path": "packages/core/src/loop/loop-builder.ts", "line": 759, "label": "dowhile(iter, predicate)" }, { "path": "packages/core/src/llm/model/model.loop.ts", "line": 23, "label": "llmStepCountIs" }] },
+    { "id": "stream", "lane": "io", "col": 5, "type": "frontend", "label": "流式输出", "sublabel": "text-delta · tool-result · finish", "sources": [{ "path": "server-adapters/hono/src/index.ts", "line": 219, "label": "text/event-stream" }] },
+    { "id": "approval", "lane": "state", "col": 3, "type": "security", "label": "审批挂起", "sublabel": "suspend() 等待批准", "icon": "waiting", "sources": [{ "path": "packages/core/src/loop/workflows/agentic-execution/tool-call-step.ts", "line": 612, "label": "suspend()" }] },
+    { "id": "memory", "lane": "state", "col": 5, "type": "database", "label": "Memory 落库", "sublabel": "saveMessages 分步保存", "sources": [{ "path": "packages/core/src/agent/save-queue/index.ts", "line": 214, "label": "flushMessages()" }, { "path": "packages/core/src/agent/save-queue/index.ts", "line": 163, "label": "memory.saveMessages" }] }
+  ],
+  "edges": [
+    { "id": "e-user-prepare", "from": "user", "to": "prepare", "label": "messages[] + 上下文" },
+    { "id": "e-prepare-llm", "from": "prepare", "to": "llm", "label": "loopOptions" },
+    { "id": "e-llm-tool", "from": "llm", "to": "tool", "label": "toolCalls" },
+    { "id": "e-llm-notool", "from": "llm", "to": "decide", "label": "无工具调用", "role": "branch" },
+    { "id": "e-llm-stream", "from": "llm", "to": "stream", "label": "text-delta 实时推流", "variant": "dashed", "role": "async" },
+    { "id": "e-tool-approval", "from": "tool", "to": "approval", "label": "需审批 → suspend", "variant": "security" },
+    { "id": "e-approval-tool", "from": "approval", "to": "tool", "label": "批准 · resume", "variant": "dashed", "role": "return" },
+    { "id": "e-tool-decide", "from": "tool", "to": "decide", "label": "tool 结果" },
+    { "id": "e-decide-llm", "from": "decide", "to": "llm", "label": "isContinued：下一轮", "variant": "emphasis", "role": "return" },
+    { "id": "e-decide-stream", "from": "decide", "to": "stream", "label": "finish chunk" },
+    { "id": "e-tool-memory", "from": "tool", "to": "memory", "label": "消息分步落库", "variant": "dashed", "role": "async" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "循环结构",
+      "items": [
+        "dowhile(迭代 workflow, 继续判定) 构成 agentic loop",
+        "每轮：llm-execution → tool-call → 结果映射 → 继续判定",
+        "stopWhen 满足或步数达 maxSteps（默认 5）时终止"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "审批（HITL）",
+      "items": [
+        "tool-call-step 先判定审批，高风险工具 suspend() 挂起",
+        "客户端批准后 run.resume() 继续执行"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "流与落库",
+      "items": [
+        "text-delta 边生成边推给客户端，工具可 eager 并行执行",
+        "工具结果写回 MessageList，SaveQueueManager 分步保存到 memory"
+      ]
+    }
+  ]
+}
