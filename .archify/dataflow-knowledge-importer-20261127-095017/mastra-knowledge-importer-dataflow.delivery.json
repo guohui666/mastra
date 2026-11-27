@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "0ca50ed9-fdd4-412b-9364-bac72254fa3b",
+  "status": "current",
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "/Users/guohui/code/mastra/.archify/dataflow-knowledge-importer-20261127-095017/candidate.json",
+  "output": "/Users/guohui/code/mastra/.archify/dataflow-knowledge-importer-20261127-095017/mastra-knowledge-importer-dataflow.html",
+  "specification": {
+    "sha256": "da2de591aae951585c335305a34a066a3ad394a7ecbf2052010eb373654c6c8d",
+    "bytes": 6330
+  },
+  "artifact": {
+    "sha256": "529e73f477448fa1b950b14ca90332a533ac57c8cae63e15e41a4a124865c330",
+    "bytes": 939232
+  }
+}

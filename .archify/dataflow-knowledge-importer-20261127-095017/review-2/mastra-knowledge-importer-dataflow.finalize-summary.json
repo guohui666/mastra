@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "dataflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "/Users/guohui/code/mastra/.archify/dataflow-knowledge-importer-20261127-095017/candidate.json",
+    "sha256": "da2de591aae951585c335305a34a066a3ad394a7ecbf2052010eb373654c6c8d",
+    "bytes": 6330
+  },
+  "artifact": {
+    "path": "/Users/guohui/code/mastra/.archify/dataflow-knowledge-importer-20261127-095017/mastra-knowledge-importer-dataflow.html",
+    "sha256": "529e73f477448fa1b950b14ca90332a533ac57c8cae63e15e41a4a124865c330",
+    "bytes": 939232
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [],
+  "diagnosticSummary": {
+    "total": 0,
+    "shown": 0,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "/Users/guohui/code/mastra/.archify/dataflow-knowledge-importer-20261127-095017/review-2/mastra-knowledge-importer-dataflow.finalize.json",
+    "summaryReceipt": "/Users/guohui/code/mastra/.archify/dataflow-knowledge-importer-20261127-095017/review-2/mastra-knowledge-importer-dataflow.finalize-summary.json",
+    "browserCheckReceipt": "/Users/guohui/code/mastra/.archify/dataflow-knowledge-importer-20261127-095017/review-2/mastra-knowledge-importer-dataflow.browser-check.json"
+  },
+  "repositoryReferences": {
+    "status": "verified",
+    "revision": "5b608ce195e6467059560d11b45395f5319e70cb",
+    "count": 15
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.3.2",
+    "availableVersion": "3.3.2",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-27T01:52:38.143Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 1994,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

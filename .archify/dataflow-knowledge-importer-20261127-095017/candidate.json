@@ -1,0 +1,160 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "Knowledge importer 运行流程 · 1.86.0",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/dataflow-knowledge-importer-20261127-095017/mastra-knowledge-importer-dataflow.html",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra.git",
+      "provider": "github",
+      "revision": "5b608ce195e6467059560d11b45395f5319e70cb"
+    }
+  },
+  "stages": [
+    { "label": "发起" },
+    { "label": "读源系统" },
+    { "label": "缓冲" },
+    { "label": "落库（事务）" }
+  ],
+  "nodes": [
+    {
+      "id": "scheduler",
+      "type": "external",
+      "label": "你的调度器",
+      "sublabel": "cron 或 scheduled workflow",
+      "stage": 0,
+      "row": 2,
+      "sources": [
+        { "path": "docs/src/content/en/docs/knowledge/importers.mdx", "line": 184, "label": "Knowledge 不调度" }
+      ]
+    },
+    {
+      "id": "knowledge",
+      "type": "backend",
+      "label": "Knowledge",
+      "sublabel": "importers: [...]",
+      "stage": 0,
+      "row": 0,
+      "sources": [
+        { "path": "packages/core/src/knowledge/config.ts", "line": 56, "label": "importers 选项" },
+        { "path": "packages/core/src/knowledge/index.ts", "line": 374, "end_line": 380, "label": "importers.run()" }
+      ]
+    },
+    {
+      "id": "runner",
+      "type": "backend",
+      "label": "runKnowledgeImport",
+      "sublabel": "预算 25 分钟",
+      "stage": 1,
+      "row": 0,
+      "width": 170,
+      "sources": [
+        { "path": "packages/core/src/knowledge/importers/runner.ts", "line": 137, "end_line": 150, "label": "runner 默认值" }
+      ]
+    },
+    {
+      "id": "importer",
+      "type": "backend",
+      "label": "Importer 类",
+      "sublabel": "import(ctx) 读源系统",
+      "stage": 1,
+      "row": 2,
+      "sources": [
+        { "path": "packages/core/src/knowledge/importers/define.ts", "line": 257, "label": "KnowledgeImporter 工厂" },
+        { "path": "docs/src/content/en/docs/knowledge/importers.mdx", "line": 22, "end_line": 32, "label": "一次 import run" }
+      ]
+    },
+    {
+      "id": "buffer",
+      "type": "backend",
+      "label": "ctx.items 缓冲",
+      "sublabel": "200 条或 30 秒发批",
+      "stage": 2,
+      "row": 0,
+      "sources": [
+        { "path": "packages/core/src/knowledge/importers/runner.ts", "line": 343, "end_line": 352, "label": "缓冲与定时发批" },
+        { "path": "packages/core/src/knowledge/importers/runner.ts", "line": 137, "end_line": 150, "label": "bufferSize 与 flushAfterMs" }
+      ]
+    },
+    {
+      "id": "host",
+      "type": "backend",
+      "label": "Importer host",
+      "sublabel": "startRun / flush / finish",
+      "stage": 3,
+      "row": 0,
+      "sources": [
+        { "path": "packages/core/src/knowledge/importers/local-host.ts", "line": 312, "label": "createLocalKnowledgeImporterHost" },
+        { "path": "packages/core/src/knowledge/importers/local-host.ts", "line": 457, "end_line": 497, "label": "startRun" },
+        { "path": "packages/core/src/knowledge/importers/local-host.ts", "line": 545, "label": "flush" }
+      ]
+    },
+    {
+      "id": "sink",
+      "type": "backend",
+      "label": "应用一批 item",
+      "sublabel": "applyKnowledgeImportFlush",
+      "stage": 3,
+      "row": 2,
+      "width": 190,
+      "sources": [
+        { "path": "packages/core/src/knowledge/importers/sink.ts", "line": 251, "label": "应用一批 item" },
+        { "path": "packages/core/src/knowledge/importers/local-host.ts", "line": 608, "end_line": 616, "label": "事务内加锁并查回执" }
+      ]
+    },
+    {
+      "id": "store",
+      "type": "database",
+      "label": "Knowledge 存储",
+      "sublabel": "pages 与 importers 表",
+      "stage": 3,
+      "row": 4,
+      "sources": [
+        { "path": "stores/libsql/src/storage/domains/knowledge/importers.ts", "line": 193, "label": "LibSQLKnowledgeImporters" },
+        { "path": "packages/core/src/knowledge/importers/local-host.ts", "line": 608, "end_line": 616, "label": "一个 storage 事务" }
+      ]
+    }
+  ],
+  "flows": [
+    { "id": "run", "from": "scheduler", "to": "knowledge", "label": "run(bindingId)", "classification": "发起", "variant": "emphasis", "labelDy": -10 },
+    { "id": "start", "from": "knowledge", "to": "runner", "label": "启动 run", "classification": "发起", "variant": "emphasis" },
+    { "id": "import", "from": "runner", "to": "importer", "label": "调 import(ctx)", "classification": "读源", "variant": "emphasis" },
+    { "id": "items", "from": "importer", "to": "buffer", "label": "items 与游标", "classification": "item", "variant": "emphasis" },
+    { "id": "batch", "from": "buffer", "to": "host", "label": "发一批", "classification": "批次", "variant": "emphasis" },
+    { "id": "apply", "from": "host", "to": "sink", "label": "应用 flush", "classification": "批次", "variant": "emphasis" },
+    { "id": "write", "from": "sink", "to": "store", "label": "一个事务写入", "classification": "page", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "一次 run 怎么走",
+      "items": [
+        "importer 只交 item：sourceId、parent、title、body，不写 page 路径",
+        "Knowledge 决定每条放在哪，记下哪个 page 来自哪条 item，下次更新而不新增",
+        "每批在一个存储事务里和游标一起提交；源系统出错抛 KnowledgeImporterSourceError"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "什么时候发批",
+      "items": [
+        "攒到 200 条，或最老的一条等了 30 秒",
+        "调用 ctx.state.set()，或 import 返回",
+        "定时批只带 item，游标只随 ctx.state.set() 前进"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "边界与结果",
+      "items": [
+        "Knowledge 不调度：同一 binding 同时只跑一个 run，第二个返回 skipped",
+        "需要支持事务的存储：@mastra/libsql、@mastra/pg 或内存",
+        "结果带 outcome、counts 和 chain；chain 为 true 表示源还没读完，建议接着再跑",
+        "晚到的父项和链接在后续批次分批归位（settle）",
+        "实验性（alpha），API 可能在版本间变"
+      ]
+    }
+  ]
+}

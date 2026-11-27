@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "def101a7-b429-45e4-ac83-d0ec87e7f56b",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "/Users/guohui/code/mastra/.archify/architecture-durable-agent-engine-20261127-095017/candidate.json",
+  "output": "/Users/guohui/code/mastra/.archify/architecture-durable-agent-engine-20261127-095017/mastra-durable-agent-engine.html",
+  "specification": {
+    "sha256": "c69b7c76ccbe7fd2e727f59458ed21576c0d265e331fc047c11ed4f632fa2fdd",
+    "bytes": 12222
+  },
+  "artifact": {
+    "sha256": "cc94e2a634972e7bdb7fea655edf06760d8e1ddd6451224f631f1f5d2d5b1f20",
+    "bytes": 979101
+  }
+}

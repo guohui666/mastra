@@ -1,0 +1,264 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "layout": { "mode": "auto" },
+  "meta": {
+    "title": "Mastra durable agent 执行引擎 · 1.86.0",
+    "locale": "zh-CN",
+    "quality_profile": "showcase",
+    "output": ".archify/architecture-durable-agent-engine-20261127-095017/mastra-durable-agent-engine.html",
+    "repository": {
+      "url": "https://github.com/guohui666/mastra.git",
+      "provider": "github",
+      "revision": "5b608ce195e6467059560d11b45395f5319e70cb"
+    },
+    "views": [
+      {
+        "id": "default-path",
+        "label": "default 引擎",
+        "focus": ["app", "wrappers", "agent", "policy", "mastra", "default-engine", "loop", "storage", "stream", "recovery", "server"],
+        "note": "单进程：Agent 在当前进程里跑 durable 循环，checkpoint 落存储"
+      },
+      {
+        "id": "evented-path",
+        "label": "evented 多进程",
+        "focus": ["agent", "evented-engine", "default-engine", "loop", "pubsub", "workers", "storage"],
+        "note": "step 事件经 PubSub 交给 worker，存储的 step guard 保证只提交一次"
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "wrappers",
+      "type": "backend",
+      "label": "旧包装函数",
+      "sublabel": "createDurableAgent / createEventedAgent",
+      "pos": [40, 40],
+      "size": [254, 60],
+      "sources": [
+        { "path": "packages/core/src/agent/durable/create-durable-agent.ts", "line": 153, "label": "createDurableAgent" },
+        { "path": "packages/core/src/agent/durable/create-evented-agent.ts", "line": 132, "label": "createEventedAgent" }
+      ]
+    },
+    {
+      "id": "server",
+      "type": "security",
+      "label": "HTTP run 路由",
+      "sublabel": "abort / recover / 审批，带归属检查",
+      "pos": [400, 40],
+      "size": [223, 60],
+      "sources": [
+        { "path": "packages/server/src/server/handlers/agents.ts", "line": 2816, "label": "abort 路由" },
+        { "path": "packages/server/src/server/handlers/agents.ts", "line": 3820, "label": "recover 路由" },
+        { "path": "packages/server/src/server/handlers/agents.ts", "line": 341, "end_line": 345, "label": "run 归属检查" }
+      ]
+    },
+    {
+      "id": "mastra",
+      "type": "backend",
+      "label": "Mastra 实例",
+      "sublabel": "durable 默认值，注册 agent",
+      "pos": [760, 40],
+      "size": [200, 60],
+      "sources": [
+        { "path": "packages/core/src/mastra/index.ts", "line": 518, "end_line": 519, "label": "durable 配置" },
+        { "path": "packages/core/src/mastra/index.ts", "line": 3287, "end_line": 3298, "label": "注册 agent" }
+      ]
+    },
+    {
+      "id": "app",
+      "type": "external",
+      "label": "应用代码",
+      "sublabel": "agent.stream() / observe()",
+      "pos": [40, 170],
+      "size": [172, 60],
+      "sources": [
+        { "path": "docs/src/content/en/reference/agents/durable-agent.mdx", "line": 51, "end_line": 83, "label": "原生 Agent 执行" }
+      ]
+    },
+    {
+      "id": "agent",
+      "type": "backend",
+      "label": "原生 Agent",
+      "sublabel": "durable.executionEngine",
+      "pos": [400, 170],
+      "size": [168, 60],
+      "sources": [
+        { "path": "packages/core/src/agent/agent.ts", "line": 1254, "end_line": 1263, "label": "按策略建执行引擎" },
+        { "path": "packages/core/src/agent/agent.ts", "line": 13068, "end_line": 13082, "label": "workflowEngine 与选项" }
+      ]
+    },
+    {
+      "id": "policy",
+      "type": "backend",
+      "label": "ExecutionEnginePolicy",
+      "sublabel": "显式设置优先，注册后冻结",
+      "pos": [760, 170],
+      "size": [200, 60],
+      "sources": [
+        { "path": "packages/core/src/agent/streams/execution-policy.ts", "line": 41, "end_line": 66, "label": "register 合并默认值并冻结" },
+        { "path": "packages/core/src/agent/agent.ts", "line": 2089, "end_line": 2092, "label": "注册时套用默认值" }
+      ]
+    },
+    {
+      "id": "default-engine",
+      "type": "backend",
+      "label": "default 引擎",
+      "sublabel": "DefaultAgentExecutionEngine",
+      "pos": [400, 300],
+      "size": [179, 60],
+      "sources": [
+        { "path": "packages/core/src/agent/durable/execution-engine.ts", "line": 77, "end_line": 79, "label": "引擎类" },
+        { "path": "packages/core/src/agent/durable/execution-engine.ts", "line": 584, "end_line": 593, "label": "createWorkflow" }
+      ]
+    },
+    {
+      "id": "evented-engine",
+      "type": "backend",
+      "label": "evented 引擎",
+      "sublabel": "EventedAgentExecutionEngine",
+      "pos": [760, 300],
+      "size": [179, 60],
+      "sources": [
+        { "path": "packages/core/src/agent/durable/execution-engine.ts", "line": 1052, "end_line": 1056, "label": "后台执行" },
+        { "path": "packages/core/src/agent/durable/execution-engine.ts", "line": 547, "end_line": 576, "label": "resolveWorkflowEngine 回退" }
+      ]
+    },
+    {
+      "id": "stream",
+      "type": "backend",
+      "label": "run 流与 replay cache",
+      "sublabel": "stream topic，observe() 重连",
+      "pos": [40, 430],
+      "size": [200, 60],
+      "sources": [
+        { "path": "packages/core/src/agent/agent.ts", "line": 16373, "end_line": 16376, "label": "observe 分流" },
+        { "path": "packages/core/src/events/caching-pubsub.ts", "line": 141, "label": "CachingPubSub" },
+        { "path": "packages/core/src/agent/durable/run-stream-publisher.ts", "line": 10, "label": "run 流发布器" }
+      ]
+    },
+    {
+      "id": "loop",
+      "type": "backend",
+      "label": "durable agentic loop",
+      "sublabel": "workflow：LLM 步骤与工具步骤",
+      "pos": [400, 430],
+      "size": [192, 60],
+      "sources": [
+        { "path": "packages/core/src/agent/durable/workflows/create-durable-agentic-workflow.ts", "line": 16, "end_line": 18, "label": "循环 workflow 工厂" }
+      ]
+    },
+    {
+      "id": "workers",
+      "type": "backend",
+      "label": "worker",
+      "sublabel": "OrchestrationWorker 处理 step 事件",
+      "pos": [760, 430],
+      "size": [223, 60],
+      "sources": [
+        { "path": "packages/core/src/worker/workers/orchestration-worker.ts", "line": 24, "end_line": 32, "label": "订阅 workflows topic" },
+        { "path": "packages/core/src/agent/durable/execution-engine.ts", "line": 578, "end_line": 582, "label": "启动执行 worker" },
+        { "path": "packages/core/src/workflows/evented/setup-warning.ts", "line": 23, "end_line": 42, "label": "不支持的配置警告" }
+      ]
+    },
+    {
+      "id": "recovery",
+      "type": "backend",
+      "label": "启动恢复",
+      "sublabel": "recoverAllDurableAgents()",
+      "pos": [40, 560],
+      "size": [176, 60],
+      "sources": [
+        { "path": "packages/core/src/mastra/index.ts", "line": 5244, "end_line": 5259, "label": "recovery.durableAgents 为 auto" },
+        { "path": "packages/core/src/mastra/index.ts", "line": 5293, "end_line": 5316, "label": "recoverActiveRuns" },
+        { "path": "packages/core/src/agent/thread-stream-runtime.ts", "line": 919, "end_line": 923, "label": "interrupted 不是终态" }
+      ]
+    },
+    {
+      "id": "storage",
+      "type": "database",
+      "label": "workflows 存储",
+      "sublabel": "snapshot v1 / run journal v2",
+      "pos": [400, 560],
+      "size": [200, 60],
+      "sources": [
+        { "path": "packages/core/src/agent/durable/execution-engine.ts", "line": 595, "end_line": 603, "label": "恢复感知的快照策略" },
+        { "path": "packages/core/src/agent/durable/execution-engine.ts", "line": 605, "end_line": 612, "label": "run journal 能力检查" },
+        { "path": "stores/libsql/src/storage/domains/workflows/index.ts", "line": 608, "end_line": 614, "label": "libsql 能力声明" }
+      ]
+    },
+    {
+      "id": "pubsub",
+      "type": "messagebus",
+      "label": "PubSub",
+      "sublabel": "事件总线，默认 EventEmitterPubSub",
+      "pos": [760, 560],
+      "size": [216, 60],
+      "sources": [
+        { "path": "packages/core/src/events/pubsub.ts", "line": 144, "end_line": 164, "label": "redeliversUnacked" },
+        { "path": "packages/core/src/events/event-emitter/index.ts", "line": 57, "end_line": 67, "label": "进程内默认实现" },
+        { "path": "packages/core/src/mastra/index.ts", "line": 507, "end_line": 516, "label": "pubsub 配置" }
+      ]
+    }
+  ],
+  "connections": [
+    { "id": "app-agent", "from": "app", "to": "agent", "label": "stream() / observe()", "variant": "emphasis" },
+    { "id": "app-wrappers", "from": "app", "to": "wrappers", "label": "旧写法" },
+    { "id": "wrappers-agent", "from": "wrappers", "to": "agent", "label": "包装" },
+    { "id": "agent-policy", "from": "agent", "to": "policy", "label": "读选中的引擎" },
+    { "id": "mastra-policy", "from": "mastra", "to": "policy", "label": "注册时套用默认值" },
+    { "id": "mastra-agent", "from": "mastra", "to": "agent", "label": "注册" },
+    { "id": "agent-default", "from": "agent", "to": "default-engine", "label": "'default'", "variant": "emphasis" },
+    { "id": "agent-evented", "from": "agent", "to": "evented-engine", "label": "'evented'", "variant": "emphasis" },
+    { "id": "evented-default", "from": "evented-engine", "to": "default-engine", "label": "条件不满足时回退", "variant": "dashed" },
+    { "id": "default-loop", "from": "default-engine", "to": "loop", "label": "进程内推进", "variant": "emphasis" },
+    { "id": "evented-loop", "from": "evented-engine", "to": "loop", "label": "按 step 事件推进", "variant": "emphasis" },
+    { "id": "loop-pubsub", "from": "loop", "to": "pubsub", "label": "发 step 事件" },
+    { "id": "pubsub-workers", "from": "pubsub", "to": "workers", "label": "投递，未确认则重投" },
+    { "id": "workers-loop", "from": "workers", "to": "loop", "label": "执行 step" },
+    { "id": "loop-storage", "from": "loop", "to": "storage", "label": "存 checkpoint", "variant": "emphasis" },
+    { "id": "loop-stream", "from": "loop", "to": "stream", "label": "发布 run chunk", "variant": "emphasis" },
+    { "id": "app-stream", "from": "app", "to": "stream", "label": "observe(runId)" },
+    { "id": "recovery-storage", "from": "recovery", "to": "storage", "label": "读 running 的 run" },
+    { "id": "recovery-loop", "from": "recovery", "to": "loop", "label": "续跑" },
+    { "id": "server-agent", "from": "server", "to": "agent", "label": "abort / recover / 审批", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "怎么选引擎（1.86.0）",
+      "items": [
+        "原生 Agent 把 durable.executionEngine 设为 'default' 或 'evented'；stream() 仍返回 MastraModelOutput",
+        "Mastra.durable 给注册的 agent 一个默认值，Agent 自己的设置优先；注册或首次执行后冻结",
+        "durable: true 只开 resumable stream 并继承默认值；Mastra 没设默认值时布尔值不开 checkpoint"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "checkpoint 与恢复",
+      "items": [
+        "默认策略：running 状态只在 recovery.durableAgents 为 'auto' 或 shutdown 时存 checkpoint",
+        "storageVersion 2（实验性）用 run journal 只存变化；存储不支持时退回 1",
+        "shutdown 交还的 run 报 interrupted，不是终态；恢复后的输出跟在同一条订阅上"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "多进程 evented 的两个条件",
+      "items": [
+        "PubSub.redeliversUnacked 为 true：Redis Streams、Valkey Streams、Google Cloud Pub/Sub",
+        "workflows 存储有 step guard：@mastra/pg、@mastra/libsql",
+        "缺一个时 Mastra 打一条警告；MASTRA_DISABLE_EVENTED_SETUP_WARNING=true 关掉"
+      ]
+    },
+    {
+      "dot": "violet",
+      "title": "alpha（1.87.0，未正式发布）",
+      "items": [
+        "leaseTtlMs 可配：step 阻塞事件循环超过租约，run 会被别的实例接走",
+        "被接管的 run 再写入会抛 STORAGE_RUN_FENCE_CONFLICT，HTTP 返回 409",
+        "replay 游标从不透明的时钟值起编号；offset 用最后收到的 index + 1"
+      ]
+    }
+  ]
+}
