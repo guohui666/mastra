@@ -33,6 +33,7 @@ import type { LazyPageComponent } from './layouts/PageSuspense';
 import { AppRouteErrorPage, RouteErrorPage } from './layouts/RouteErrorPage';
 import {
   createLoadOnEntry,
+  prefetchAppLayout,
   prefetchBoard,
   prefetchCardDraft,
   prefetchComposer,
@@ -42,13 +43,11 @@ import {
   prefetchRuleDecisions,
   prefetchRetiredReviewBoard,
   prefetchSessionFrame,
-  prefetchSidebar,
   reloadOnAnotherThread,
   retiredReviewBoardSearch,
 } from './routeLoaders';
 import type { Prefetch, RouteLoaderServices } from './routeLoaders';
-import { pendingCreateFlowFactoryId } from './domains/workspaces/hooks/useCreateFactoryFlow';
-import { cardDraftPath, createFactoryPath } from './domains/workspaces/services/factoryPaths';
+import { cardDraftPath } from './domains/workspaces/services/factoryPaths';
 import { hasResumableFactoryOnboarding } from './domains/workspaces/services/onboardingFlow';
 
 // Only the boards ship in the startup bundle; every other page loads on first
@@ -97,12 +96,13 @@ const FactorySkillPage = lazyPage(
   () => import('./pages/FactorySkillPage').then(module => module.FactorySkillPage),
   <AppPageLoader />,
 );
+// Board settings and Routing are tabs of one view: opening either loads the other, so switching tabs shows no loader.
 const BoardIntakePage = lazyPage(
-  () => import('./pages/BoardIntakePage').then(module => module.BoardIntakePage),
-  <AppPageLoader />,
-);
-const BoardRulesPage = lazyPage(
-  () => import('./pages/BoardRulesPage').then(module => module.BoardRulesPage),
+  () =>
+    import('./pages/BoardIntakePage').then(module => {
+      BoardConfigPage.preload().catch(() => undefined);
+      return module.BoardIntakePage;
+    }),
   <AppPageLoader />,
 );
 const NewBoardPage = lazyPage(
@@ -110,15 +110,15 @@ const NewBoardPage = lazyPage(
   <AppPageLoader />,
 );
 const BoardConfigPage = lazyPage(
-  () => import('./pages/BoardConfigPage').then(module => module.BoardConfigPage),
+  () =>
+    import('./pages/BoardConfigPage').then(module => {
+      BoardIntakePage.preload().catch(() => undefined);
+      return module.BoardConfigPage;
+    }),
   <AppPageLoader />,
 );
 const SlackConnectionPage = lazyPage(
   () => import('./pages/SlackConnectionPage').then(module => module.SlackConnectionPage),
-  <AppPageLoader />,
-);
-const CreateFactoryPage = lazyPage(
-  () => import('./pages/CreateFactoryPage').then(module => module.CreateFactoryPage),
   <AppPageLoader />,
 );
 const RulesPage = lazyPage(() => import('./pages/RulesPage').then(module => module.RulesPage), <AppPageLoader />);
@@ -136,12 +136,6 @@ function RootLanding() {
   // Preserve `routeErrorNotice`-style state through the redirect chain (e.g.
   // FactoryLayout bouncing an unknown factoryId here).
   const { state, search } = useLocation();
-
-  // OAuth callbacks land on `/?github=connected` etc. A mid-way create-factory
-  // flow knows the Factory it was opened from, so it resumes there (with the
-  // search intact) without waiting on any query.
-  const createFlowFactoryId = pendingCreateFlowFactoryId();
-  if (createFlowFactoryId) return <Navigate to={`${createFactoryPath(createFlowFactoryId)}${search}`} replace />;
 
   if (isPending || !factories) return null;
 
@@ -238,6 +232,13 @@ function SkillsSettingsRedirect() {
   return <Navigate to={boardSkillsPath(factoryId, 'work')} replace />;
 }
 
+/** The board's Rules page (and Card moves before it) became the board's canvas; `?into=` opened one phase's rules. */
+function LegacyRulesRedirect() {
+  const { search } = useLocation();
+  const into = new URLSearchParams(search).get('into');
+  return <Navigate to={into ? `../config/${encodeURIComponent(into)}` : '../config'} relative="path" replace />;
+}
+
 function KnowledgeRoute() {
   const { factoryId } = useParams<{ factoryId: string }>();
   const features = useServerFeatures();
@@ -287,7 +288,7 @@ export function createAppRoutes(services?: RouteLoaderServices, holdsNavigation?
                 {
                   element: <AppLayout />,
                   // Load the chat code while its session links appear, before a card or session is clicked.
-                  ...loadOnEntry(prefetchSidebar, chatPages),
+                  ...loadOnEntry(prefetchAppLayout, chatPages),
                   children: [
                     {
                       // Errors replace only the page, preserving the shell and its providers.
@@ -319,7 +320,6 @@ export function createAppRoutes(services?: RouteLoaderServices, holdsNavigation?
                           ],
                         },
                         { path: 'new', ...lazyRoute(NewPage, prefetchComposer) },
-                        { path: 'new-factory', ...lazyRoute(CreateFactoryPage) },
                         { path: 'new-board', ...lazyRoute(NewBoardPage) },
                         { path: 'work', element: <WorkBoardPage />, ...loadOnEntry(prefetchBoard) },
                         // The Review board was retired: new pull requests live on Work.
@@ -337,13 +337,12 @@ export function createAppRoutes(services?: RouteLoaderServices, holdsNavigation?
                         { path: 'boards/:boardId/skills/:skillName', ...lazyRoute(FactorySkillPage) },
                         { path: 'work/new-skill', ...lazyRoute(FactorySkillPage) },
                         { path: 'boards/:boardId/new-skill', ...lazyRoute(FactorySkillPage) },
-                        { path: 'work/rules', ...lazyRoute(BoardRulesPage) },
-                        { path: 'boards/:boardId/rules', ...lazyRoute(BoardRulesPage) },
                         { path: 'work/intake', ...lazyRoute(BoardIntakePage) },
                         { path: 'boards/:boardId/intake', ...lazyRoute(BoardIntakePage) },
-                        // Card moves became the board's Rules page.
-                        { path: 'work/moves', element: <Navigate to="../rules" relative="path" replace /> },
-                        { path: 'boards/:boardId/moves', element: <Navigate to="../rules" relative="path" replace /> },
+                        { path: 'work/rules', element: <LegacyRulesRedirect /> },
+                        { path: 'boards/:boardId/rules', element: <LegacyRulesRedirect /> },
+                        { path: 'work/moves', element: <LegacyRulesRedirect /> },
+                        { path: 'boards/:boardId/moves', element: <LegacyRulesRedirect /> },
                         { path: 'activity', element: <FactoryHomeRedirect /> },
                         { path: 'overview', element: <FactoryHomeRedirect /> },
                         { path: 'attention', element: <FactoryHomeRedirect /> },

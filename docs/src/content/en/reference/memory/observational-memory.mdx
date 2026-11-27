@@ -871,10 +871,10 @@ OM decides when to observe from local token estimates, not from the provider's u
 
 OM caches estimates in message metadata so threshold checks don't recount the same content:
 
-- Per-part estimates are stored on `part.providerMetadata.mastra` and reused while the cache version and tokenizer source match.
+- Per-part estimates are stored on `part.providerMetadata.mastra.tokenEstimate` and saved with the message. A later request reuses one only when its content hash matches the part, so a count that no longer matches the part's content is ignored and the part is counted again. The hash shows a count is current, not who wrote it: a caller-supplied count whose hash matches the content is used. Counts for history that has none are saved once, for the current thread only.
 - Messages with string-only content (no parts) use a message-level cache.
 - Message and conversation overhead is recalculated every pass. Only payload estimates are cached.
-- `data-*` and `reasoning` parts are skipped and not cached.
+- `data-*`, `reasoning` and `step-start` parts are skipped and not cached.
 
 ### Supplying your own estimate for a file
 
@@ -1432,6 +1432,27 @@ The standalone `ObservationalMemory` class accepts all the same options as the `
       'When enabled, thread IDs are hashed before being included in observation context. This prevents the LLM from recognizing patterns in thread identifiers. Automatically enabled when using resource scope through the Memory class.',
     isOptional: true,
     defaultValue: 'false',
+  },
+]}
+/>
+
+## Hosted observational memory
+
+A memory implementation that runs Observational Memory itself, instead of through the `observational-memory` processor (for example a hosted backend), can extend `MastraMemory` and override these methods. Memory routes then report its settings and records. The base class returns `undefined` from each method, which means the memory doesn't provide them.
+
+<PropertiesTable
+  content={[
+  {
+    name: 'getObservationalMemoryConfig',
+    type: '(args: { requestContext?: RequestContext }) => Promise<ObservationalMemorySettings | undefined>',
+    description:
+      'Returns the Observational Memory settings: `enabled`, `scope` (`thread` or `resource`), and optionally `messageTokens` and `observationTokens` thresholds.',
+  },
+  {
+    name: 'getObservationalMemoryRecords',
+    type: '(args: GetObservationalMemoryRecordsInput) => Promise<ObservationalMemoryRecords | undefined>',
+    description:
+      'Returns the current record (`null` before the first observation) and past generations in `history`, newest first. Input accepts `threadId`, `resourceId`, `historyLimit`, `from`, `to`, `offset` and `requestContext`. Callers check thread access before calling it.',
   },
 ]}
 />

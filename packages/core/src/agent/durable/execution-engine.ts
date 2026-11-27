@@ -1,10 +1,12 @@
 import { ErrorCategory, ErrorDomain, MastraError, getErrorFromUnknown } from '../../error';
 import type { PubSub } from '../../events/pubsub';
+import { reachesOtherProcesses } from '../../events/reach';
 import type { IMastraLogger } from '../../logger';
 import type { Mastra } from '../../mastra';
 import type { ObservabilityContext } from '../../observability';
 import type { RequestContext } from '../../request-context';
 import type { MemoryStorage, WorkflowsStorage } from '../../storage';
+import { warnUnsupportedEventedSetup } from '../../workflows/evented/setup-warning';
 import type { ShouldPersistSnapshotFn, WorkflowRunState, WorkflowRunStatus } from '../../workflows/types';
 import { agentThreadStreamRuntime } from '../thread-stream-runtime';
 import {
@@ -20,13 +22,10 @@ import {
   markErrorForStreamRejection,
   RECOVER_SHUTDOWN_ERROR_ID,
 } from './constants';
-import type {
-  DurableAgentActiveRun,
-  DurableAgentListActiveRunsOptions,
-  DurableAgentListActiveRunsResult,
-} from './durable-agent';
 import type { UntrackedRunLiveness } from './execution-fence';
 import {
+  DurableExecutionFenceError,
+  EXECUTION_UNVERIFIED_ERROR_ID,
   ExecutionFence,
   fencePubSub,
   readRunGeneration,
@@ -35,9 +34,20 @@ import {
   RECOVER_RUN_ACTIVE_LOCALLY_ERROR_ID,
 } from './execution-fence';
 import { withExecutionStreamProducer } from './execution-stream-publisher';
+import { openStepsOfCrashedSegment } from './segment-spans';
 import { createSupersededEventFilter, emitAbortEvent, newestLogIndex } from './stream-adapter';
-import type { AgentStreamEvent, DurableAgenticWorkflowInput, DurableToolCallInput } from './types';
-import { createDurableAgenticWorkflow } from './workflows/create-durable-agentic-workflow';
+import type {
+  DurableAgentActiveRun,
+  DurableAgentListActiveRunsOptions,
+  DurableAgentListActiveRunsResult,
+  AgentStreamEvent,
+  DurableAgenticWorkflowInput,
+  DurableToolCallInput,
+} from './types';
+import {
+  createDurableAgenticWorkflow,
+  defaultShouldPersistSnapshot,
+} from './workflows/create-durable-agentic-workflow';
 import { MAP_FINAL_OUTPUT_STEP_ID } from './workflows/durable-loop-builder';
 import { readAccumulatedSteps } from './workflows/shared/accumulated-steps';
 import { latestMessageListState } from './workflows/shared/message-list-state';
@@ -64,7 +74,7 @@ export interface DurableWorkflowOptions {
   guardrailLogger?: IMastraLogger;
 }
 
-export class DurableExecutionEngine {
+export class DefaultAgentExecutionEngine {
   #workflow: DurableWorkflow | null = null;
   #resolvedWorkflowEngine: 'default' | 'evented' | null = null;
   #warnedPersistencePolicy = false;
@@ -91,6 +101,14 @@ export class DurableExecutionEngine {
     return true;
   }
 
+  /**
+   * Whether this process runs the run's steps, which keep its registered MessageList in sync.
+   * Otherwise its readers take each step's response messages from the stream.
+   */
+  get executesStepsLocally(): boolean {
+    return true;
+  }
+
   async readReplayFloor(
     pubsub: PubSub,
     runId: string,
@@ -104,13 +122,35 @@ export class DurableExecutionEngine {
     const keepReplayEvent = createSupersededEventFilter(history);
     const attachedAtLogIndex = newestLogIndex(history);
     if (!offset) return { keepReplayEvent, attachedAtLogIndex };
-    const skipped = history.slice(0, offset);
-    if (skipped.length === offset) {
-      let floor: number | undefined;
-      for (const event of skipped) {
-        const generation = event.generation;
-        if (typeof generation === 'number' && (floor === undefined || generation > floor)) floor = generation;
-      }
+    // The floor is the highest generation among the events the client already
+    // consumed, i.e. everything below its offset. It is a blunt instrument:
+    // `keepReplayEvent` already drops exactly the ranges a later execution
+    // declared abandoned, so the floor only exists to stop a stale frame from
+    // a lost execution reaching a client that has moved past it.
+    //
+    // A floor read off the log can only be too low, never too high, and too
+    // low is covered by `keepReplayEvent`. So whenever the log holds anything
+    // below the offset, use it. Requiring the indices below the offset to be
+    // contiguous would be stricter but wrong: one hole from a failed append
+    // (possible on the non-atomic composed fallback) would fall through to the
+    // run's current generation and discard committed output from an earlier
+    // generation that was never superseded.
+    //
+    // Storage is consulted only when the log holds nothing below the offset,
+    // which is the case where there is genuinely no evidence. Indices are
+    // opaque cursors seeded per log (see MastraServerCache.listPushIndexed),
+    // so a log recreated after expiry numbers above an old offset and lands
+    // here rather than answering from the wrong segment.
+    let first: number | undefined;
+    let floor: number | undefined;
+    for (const event of history) {
+      const index = event.index;
+      if (typeof index !== 'number' || index >= offset) continue;
+      if (first === undefined || index < first) first = index;
+      const generation = event.generation;
+      if (typeof generation === 'number' && (floor === undefined || generation > floor)) floor = generation;
+    }
+    if (first !== undefined) {
       return { minGeneration: floor, keepReplayEvent, attachedAtLogIndex };
     }
     return { minGeneration: await readRunGeneration(this.mastra, runId), keepReplayEvent, attachedAtLogIndex };
@@ -166,7 +206,18 @@ export class DurableExecutionEngine {
     if (typeof historyPubsub.getHistory !== 'function') return 'latest';
     try {
       const history = await historyPubsub.getHistory(AGENT_STREAM_TOPIC(runId));
-      return Array.isArray(history) && history.length > 0 ? history.length : 'latest';
+      if (!Array.isArray(history) || history.length === 0) return 'latest';
+      // Indices are opaque cursors, not list positions: a log recreated after
+      // expiry is epoch-seeded (see MastraServerCache.listPushIndexed), so the
+      // boundary is one past the newest numbered frame. Using the history
+      // length here would sit below every seeded index and replay the prior
+      // segment — including its terminal event — into the resumed reader.
+      let newest = -1;
+      for (const event of history) {
+        const index = (event as { index?: unknown })?.index;
+        if (typeof index === 'number' && index > newest) newest = index;
+      }
+      return newest >= 0 ? newest + 1 : 'latest';
     } catch {
       return 'latest';
     }
@@ -553,6 +604,17 @@ export class DurableExecutionEngine {
 
   getWorkflow(options: DurableWorkflowOptions) {
     if (!this.#workflow) {
+      if (options.storesRunsInJournal) {
+        // Workflow creation is synchronous; inspect the registered store without initializing it.
+        const storage = this.mastra?.getStorage();
+        const workflowsStore = storage?.stores?.workflows;
+        if (workflowsStore && !workflowsStore.supportsRunJournal()) {
+          options.guardrailLogger?.warn(
+            `DurableAgent '${this.id}' sets storageVersion: 2, which ${storage?.name ?? 'the configured'} storage ` +
+              `doesn't support yet; storing new runs as version 1.`,
+          );
+        }
+      }
       this.#workflow = this.createWorkflow(options);
       this.warnOnRiskyPersistencePolicy(options.shouldPersistSnapshot, options.guardrailLogger);
       // Register mastra on the workflow so execution steps can access agents/tools.
@@ -795,6 +857,7 @@ export class DurableExecutionEngine {
     workflowInput: DurableAgenticWorkflowInput;
     finishPublishedBeforeCrash: boolean;
     originalSpansEnded: boolean;
+    openStepsOf: string[] | undefined;
   }> {
     const persisted = await this.loadPersistedRunSnapshot(workflowsStore, runId);
     if (!persisted) {
@@ -883,15 +946,18 @@ export class DurableExecutionEngine {
     }
 
     const finishPublishedBeforeCrash = snapshot.context?.[MAP_FINAL_OUTPUT_STEP_ID]?.status === 'success';
+    const results = Object.values(snapshot.context ?? {}) as Array<{ status?: string; resumedAt?: number } | undefined>;
+    // The default engine keeps the suspended result until the resumed step finishes.
+    const stepSuspended = results.some(result => result?.status === 'suspended');
     // Spans from a segment after resume lived only in the lost process.
-    const resumed = Object.values(snapshot.context ?? {}).some(
-      result => result && typeof result === 'object' && 'resumedAt' in result && result.resumedAt != null,
-    );
+    const resumed = stepSuspended || results.some(result => result?.resumedAt != null);
     return {
       snapshot,
       workflowInput,
       finishPublishedBeforeCrash,
       originalSpansEnded: finishPublishedBeforeCrash || resumed,
+      // The suspension ended the step it saved, so the crash left none open.
+      openStepsOf: stepSuspended ? [] : openStepsOfCrashedSegment(snapshot.requestContext, runId),
     };
   }
 
@@ -975,5 +1041,97 @@ export class DurableExecutionEngine {
     _guardrailLogger: IMastraLogger | undefined,
   ): { sharedExecution: boolean; usesRunPubSub: boolean } {
     return { sharedExecution: false, usesRunPubSub: true };
+  }
+}
+
+/**
+ * Evented engine variant. Lives in this module, right after its parent, so the
+ * `extends` never runs while `DefaultAgentExecutionEngine` is still loading:
+ * this module's imports lead back to `Agent`, which imports both engines.
+ */
+export class EventedAgentExecutionEngine extends DefaultAgentExecutionEngine {
+  #warnedUnfencedSharedExecution = false;
+
+  override get executionMode(): 'blocking' | 'background' {
+    return 'background';
+  }
+
+  // Evented execution can return before the suspended snapshot lands.
+  override get suspendPersistedOnReturn(): boolean {
+    return false;
+  }
+
+  // Workers elsewhere run the steps when this instance runs none (e.g. `MASTRA_WORKERS=false`).
+  // Read after the run started its local workers, if it has any.
+  override get executesStepsLocally(): boolean {
+    return this.mastra?.__hasLocalWorkflowExecution() ?? true;
+  }
+
+  override prepareExecution(
+    pubsub: PubSub | undefined,
+    fence: ExecutionFence | undefined,
+    workflowEngine: 'default' | 'evented',
+    logger: IMastraLogger,
+    guardrailLogger: IMastraLogger | undefined,
+  ): { sharedExecution: boolean; usesRunPubSub: boolean } {
+    const engine = this.resolveWorkflowEngine(workflowEngine, logger);
+    const sharedTransport = engine === 'evented' && pubsub !== undefined && reachesOtherProcesses(pubsub);
+    if (sharedTransport && this.mastra) {
+      const mastra = this.mastra;
+      // The store resolves asynchronously and this path is sync. The warning never gates the run.
+      void Promise.resolve(mastra.getStorage()?.getStore('workflows'))
+        .catch(() => undefined)
+        .then(store => warnUnsupportedEventedSetup(mastra, store))
+        .catch(() => {});
+    }
+    const sharedExecution = sharedTransport && fence?.generation !== undefined;
+    if (sharedTransport && !sharedExecution && !this.#warnedUnfencedSharedExecution) {
+      this.#warnedUnfencedSharedExecution = true;
+      guardrailLogger?.warn(
+        `EventedAgent '${this.id}': shared execution without storage-backed run fencing keeps its existing ` +
+          'behavior: API shutdown or loss can interrupt remote workers. Use a shared fencing-capable storage adapter ' +
+          'to keep workers running independently of the API process.',
+      );
+    }
+    return { sharedExecution, usesRunPubSub: engine === 'default' };
+  }
+
+  override finishExecution(
+    runId: string,
+    executionFence: ExecutionFence | undefined,
+    sharedExecution: boolean,
+    completion: ExecutionCompletion,
+  ): ExecutionOutcome {
+    if (!sharedExecution) return super.finishExecution(runId, executionFence, sharedExecution, completion);
+    executionFence?.detach();
+    if ('error' in completion) {
+      // With no successor, only the disconnected observer can close its stream.
+      if (
+        completion.error instanceof DurableExecutionFenceError &&
+        completion.error.id === EXECUTION_UNVERIFIED_ERROR_ID
+      ) {
+        return { owner: 'workers', error: completion.error };
+      }
+      this.mastra?.getLogger()?.warn('Evented durable observer disconnected; workers retain settlement authority', {
+        runId,
+        error: completion.error,
+      });
+    }
+    return { owner: 'workers' };
+  }
+
+  override resolveShouldPersistSnapshot(_predicate?: ShouldPersistSnapshotFn): ShouldPersistSnapshotFn {
+    return defaultShouldPersistSnapshot;
+  }
+  override warnOnRiskyPersistencePolicy(
+    predicate: ShouldPersistSnapshotFn | undefined,
+    guardrailLogger: IMastraLogger | undefined,
+  ): void {
+    if (predicate)
+      guardrailLogger?.warn(
+        `EventedAgent '${this.id}': ignoring the shouldPersistSnapshot option. ` +
+          'The evented engine requires the full snapshot set (pending|paused|suspended|running) — ' +
+          `the initial 'running' write creates the base row that suspend-merges and multi-worker coordination build on.`,
+      );
   }
 }
