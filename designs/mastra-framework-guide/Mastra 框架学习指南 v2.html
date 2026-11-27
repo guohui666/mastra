@@ -463,6 +463,11 @@
       <a class="sub" href="#update-workflow">Workflow state</a>
       <a class="sub" href="#update-approval">审批修复</a>
       <a class="sub" href="#update-storage-v2">Storage v2 瘦身</a>
+      <a class="sub" href="#update-durable-engine">Durable 执行引擎</a>
+      <a class="sub" href="#update-knowledge-importer">Knowledge importer</a>
+      <a class="sub" href="#update-channel-tools">Channel 工具</a>
+      <a class="sub" href="#update-security">1.86.0 安全修复</a>
+      <a class="sub" href="#update-186-misc">1.86.0 其它与 1.87 alpha</a>
       <a class="sub" href="#update-mcp">MCP 2.6–2.10</a>
       <a class="sub" href="#update-client">client-js 重试</a>
       <a class="sub" href="#update-memory">memory 修复</a>
@@ -474,11 +479,11 @@
       <h1>Mastra 框架学习指南</h1>
       <p class="lede">Mastra 是 TypeScript 框架。它用来做 AI agent 和 AI 应用。你在服务端注册 Agent、Tool、Workflow，再用 HTTP、React 或现有 Web 框架接到前端。它也能作为独立 server 部署。</p>
       <ul class="facts">
-        <li><span>核心包</span><b>@mastra/core 1.85.0</b></li>
+        <li><span>核心包</span><b>@mastra/core 1.86.0</b></li>
         <li><span>许可</span><b>Apache-2.0，ee/ 另计</b></li>
         <li><span>本地 Studio</span><b>localhost:4111</b></li>
       </ul>
-      <p class="meta">抽查对象是当前仓库工作副本。包版本会变。第 1–10 节逐句出处是 <code>explorations/mastra-framework-learning-guide.md</code>，只转写对上源码或文档的内容。第 11 节是 2026-11-19 按 upstream <code>10b2d3fc6d</code> 直接对照各包 CHANGELOG 和文档新增的梳理。</p>
+      <p class="meta">抽查对象是当前仓库工作副本。包版本会变。第 1–10 节逐句出处是 <code>explorations/mastra-framework-learning-guide.md</code>，只转写对上源码或文档的内容。第 11 节是 2026-11-19 按 upstream <code>10b2d3fc6d</code> 直接对照各包 CHANGELOG 和文档新增的梳理，2026-11-27 按 upstream <code>06cd8b927b3</code> 续写（core 1.86.0 正式版和 1.87.0 alpha）。</p>
 
       <h2 id="map">01 仓库地图</h2>
       <p>每个目录只说它在框架里的位置。包名来自该目录的 package.json。</p>
@@ -641,6 +646,7 @@ src/mastra/index.ts</pre>
         <li>另外还有 <code>agents</code>（subagent）、<code>workflows</code>、<code>scorers</code>、<code>skills</code>、<code>voice</code>、<code>channels</code>、<code>browser</code>、<code>workspace</code>、<code>hooks</code>、<code>durable</code>、<code>signals</code>、<code>goal</code>、<code>requestContextSchema</code>。</li>
       </ul>
       <p>调用：<code>.generate()</code> 返回完整结果。<code>.stream()</code> 按 token 流式返回。</p>
+      <p><code>durable.executionEngine</code> 是 1.86.0 加的字段。设成 <code>'default'</code> 或 <code>'evented'</code> 后，这个 Agent 的循环会存 checkpoint，重启后可以续跑。<code>stream()</code> 和 <code>generate()</code> 的返回形状不变。写法和取舍见 <a href="#update-durable-engine">更新梳理 · Durable 执行引擎</a>。</p>
 
       <h3 id="tool">Tool</h3>
       <p>工厂是 <code>createTool</code>，从 <code>@mastra/core/tools</code> 导入。<code>ToolAction</code> 把约束和执行分开：</p>
@@ -779,7 +785,7 @@ export function App({ children }) {
           <tr><td>Working memory</td><td>跨轮保存结构化用户事实。</td><td><code>MemoryConfig.workingMemory</code>。</td></tr>
           <tr><td>Semantic recall</td><td>用向量找回相关旧消息。还要 vector store。</td><td><code>MemoryConfig.semanticRecall</code>。</td></tr>
           <tr><td>Observational memory</td><td>Observer 和 Reflector 把长对话压成观察日志。</td><td><code>MemoryConfig.observationalMemory</code>。</td></tr>
-          <tr><td>Knowledge</td><td>跨会话共享的页面、笔记、链接图。Agent 用工具搜索读写。alpha。</td><td><code>@mastra/core/knowledge</code> 的 <code>Knowledge</code>（core 1.82.0 起）。按 scope 隔离，角色分 viewer、contributor、editor、owner。详见 <a href="#update-knowledge">更新梳理 · Knowledge</a>。</td></tr>
+          <tr><td>Knowledge</td><td>跨会话共享的页面、笔记、链接图。Agent 用工具搜索读写。alpha。</td><td><code>@mastra/core/knowledge</code> 的 <code>Knowledge</code>（core 1.82.0 起）。按 scope 隔离，角色分 viewer、contributor、editor、owner。1.86.0 起可以自己写 importer，把外部系统同步进来（实验性）。详见 <a href="#update-knowledge">更新梳理 · Knowledge</a> 和 <a href="#update-knowledge-importer">Knowledge importer</a>。</td></tr>
           <tr><td>RAG</td><td>切块、embedding、向量库、检索。</td><td><code>@mastra/rag</code> 的 <code>MDocument</code>，再加一个 vector 包。总览在 reference/rag/overview.mdx。</td></tr>
           <tr><td>Storage</td><td>按 domain 持久化。</td><td><code>@mastra/libsql</code>、<code>@mastra/pg</code> 等。Config 字段 <code>storage</code>。</td></tr>
           <tr><td>Voice</td><td>TTS、STT、部分 STS。</td><td><code>voice/</code> 下各包。Agent 字段 <code>voice</code>。Config 字段 <code>tts</code>。</td></tr>
@@ -787,11 +793,11 @@ export function App({ children }) {
           <tr><td>Observability</td><td>span、log、metric、feedback。</td><td><code>@mastra/observability</code>。Config 字段 <code>observability</code>。</td></tr>
           <tr><td>Tracing exporter</td><td>把 trace 送到各后端。</td><td><code>@mastra/langfuse</code>、<code>@mastra/langsmith</code>、<code>@mastra/braintrust</code>、<code>@mastra/datadog</code>、<code>@mastra/otel-exporter</code>、<code>@mastra/arize</code>、<code>@mastra/sentry</code>、<code>@mastra/posthog</code>、<code>@mastra/laminar</code>、<code>@mastra/arthur</code>、<code>@mastra/deepeval</code>。</td></tr>
           <tr><td>Auth</td><td>保护 Studio 和 <code>/api</code>。</td><td><code>@mastra/auth</code> 及 <code>auth/*</code>。字段 <code>server.auth</code>。</td></tr>
-          <tr><td>Channels</td><td>Slack、Discord、Teams、Telegram，以及文档写的 Chat SDK adapter。</td><td><code>@mastra/slack</code> 等。示例 adapter 用 <code>@chat-adapter/slack</code>。Agent 字段 <code>channels</code>。Config 字段 <code>channels</code>。</td></tr>
+          <tr><td>Channels</td><td>Slack、Discord、Teams、Telegram，以及文档写的 Chat SDK adapter。</td><td><code>@mastra/slack</code> 等。示例 adapter 用 <code>@chat-adapter/slack</code>。Agent 字段 <code>channels</code>。Config 字段 <code>channels</code>。1.86.0 起 <code>createChannelTools()</code> 给 agent 读消息、发消息的工具，见 <a href="#update-channel-tools">更新梳理 · Channel 工具</a>。</td></tr>
           <tr><td>Browser</td><td>打开网页、填表、抽数据。</td><td><code>@mastra/agent-browser</code> 等。Agent 字段 <code>browser</code>。</td></tr>
           <tr><td>Sandbox</td><td>隔离的命令和文件系统。</td><td><code>Workspace</code>、<code>LocalSandbox</code>。远程包在 <code>workspaces/</code>。Agent 字段 <code>workspace</code>。</td></tr>
           <tr><td>Harness</td><td>长任务：durable run、后台任务、目标、定时、信号、会话控制器。</td><td>Config 的 <code>agentControllers</code>、<code>backgroundTasks</code>、<code>schedules</code>。Agent 的 <code>durable</code>、<code>goal</code>、<code>signals</code>。</td></tr>
-          <tr><td>Durable agents</td><td>断线或重启后还能接上同一次 run。</td><td>导出路径 <code>@mastra/core/agent/durable</code>。</td></tr>
+          <tr><td>Durable agents</td><td>断线或重启后还能接上同一次 run。循环存在 workflow 里，按 step 存 checkpoint。</td><td>1.86.0 起：Agent 或 Mastra 的 <code>durable.executionEngine</code>。旧的包装写法是 <code>@mastra/core/agent/durable</code> 的 <code>createDurableAgent()</code>。见 <a href="#update-durable-engine">更新梳理 · Durable 执行引擎</a>。</td></tr>
           <tr><td>Resumable streams</td><td>每个 run 发布到 stream topic 并留 replay cache。断线重连可续看，<code>observe()</code> 可旁观。</td><td>core 1.83.0 起对所有注册 agent 默认开。Agent 字段 <code>streams</code>。文档 <code>agents/resumable-streams.mdx</code>。</td></tr>
           <tr><td>Goals</td><td>有目标就继续做，直到完成或预算用完。</td><td><code>AgentConfig.goal</code>，类型 <code>GoalConfig</code>。</td></tr>
           <tr><td>Schedules</td><td>cron 触发 workflow 或 agent。</td><td>Config 的 <code>scheduler</code>、<code>schedules</code>。workflow 的 <code>schedule</code>。</td></tr>
@@ -872,15 +878,15 @@ export const mastra = new Mastra({
       <table>
         <thead><tr><th>包</th><th>版本</th><th>上一轮</th><th>license 字段</th></tr></thead>
         <tbody>
-          <tr><td><code>@mastra/core</code></td><td>1.85.0</td><td>1.79.0</td><td>Apache-2.0</td></tr>
-          <tr><td><code>mastra</code> CLI</td><td>1.40.1</td><td>1.35.0</td><td>Apache-2.0</td></tr>
-          <tr><td><code>create-mastra</code></td><td>1.40.1</td><td>1.35.0</td><td>Apache-2.0</td></tr>
-          <tr><td><code>@mastra/client-js</code></td><td>1.61.1</td><td>1.56.0</td><td>Apache-2.0</td></tr>
-          <tr><td><code>@mastra/react</code></td><td>1.15.2</td><td>1.12.0</td><td>Apache-2.0</td></tr>
-          <tr><td><code>@mastra/ai-sdk</code></td><td>1.12.0</td><td>1.11.2</td><td>Apache-2.0</td></tr>
-          <tr><td><code>@mastra/server</code></td><td>1.85.0</td><td>1.79.0</td><td>Apache-2.0</td></tr>
-          <tr><td><code>@mastra/memory</code></td><td>1.41.2</td><td>1.39.0</td><td>Apache-2.0</td></tr>
-          <tr><td><code>@mastra/mcp</code></td><td>2.10.0</td><td>2.5.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/core</code></td><td>1.86.0</td><td>1.85.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>mastra</code> CLI</td><td>1.40.2</td><td>1.40.1</td><td>Apache-2.0</td></tr>
+          <tr><td><code>create-mastra</code></td><td>1.40.2</td><td>1.40.1</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/client-js</code></td><td>1.62.0</td><td>1.61.1</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/react</code></td><td>1.16.0</td><td>1.15.2</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/ai-sdk</code></td><td>1.12.1</td><td>1.12.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/server</code></td><td>1.86.0</td><td>1.85.0</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/memory</code></td><td>1.41.3</td><td>1.41.2</td><td>Apache-2.0</td></tr>
+          <tr><td><code>@mastra/mcp</code></td><td>2.11.0</td><td>2.10.0</td><td>Apache-2.0</td></tr>
         </tbody>
       </table>
       <p>Apache-2.0 覆盖 <code>ee/</code> 以外、且没有单独第三方许可的代码。本轮各包变化的明细见 <a href="#update">11 更新梳理</a>。更早的 <code>-alpha</code> 时代差异见 <a href="#versions">版本差异</a>。</p>
@@ -1776,7 +1782,7 @@ app.post('/feishu/callback', async (req, res) =&gt; {
       <ul>
         <li>恢复历史：<code>GET /api/memory/threads/:threadId/messages</code>（handlers/memory.ts:1083）。下一轮带同一 threadId 自动接上。</li>
         <li>看进行中的输出：<code>POST /api/agents/:id/threads/subscribe</code>（SSE，<code>sseFlushOnConnect: true</code>，连上先推当前状态）。为多端或重进看同一会话设计。</li>
-        <li>后台继续跑：durable agent（<code>recovery: { durableAgents: 'auto' }</code>，agent/durable/create-durable-agent.ts:83），快照持久化，重启断点续跑；或 <code>queue-message</code> / <code>send-message</code> 不绑定调用方连接。</li>
+        <li>后台继续跑：durable agent（<code>recovery: { durableAgents: 'auto' }</code>，agent/durable/create-durable-agent.ts:83），快照持久化，重启断点续跑；或 <code>queue-message</code> / <code>send-message</code> 不绑定调用方连接。1.86.0 起原生 Agent 设 <code>durable.executionEngine</code> 就能这样跑，不用再包一层，见 <a href="#update-durable-engine">更新梳理 · Durable 执行引擎</a>。</li>
       </ul>
       <table>
         <thead><tr><th>断点时的状态</th><th>去处</th></tr></thead>
@@ -1797,7 +1803,7 @@ app.post('/feishu/callback', async (req, res) =&gt; {
         <li>Agent 版本化。<code>/stored/agents/:id/versions</code> 的 list/create/activate/restore/compare。<code>#execute</code> 顶部 <code>resolveVersionedAgent</code>（agent.ts:8607），客户端可用 <code>requestContext.agentVersionId</code> 钉版本。旧 run 用旧定义跑完，新请求走新版本。</li>
       </ol>
       <div class="note">
-        <p>风险：core 的 workflows 里没有快照 schema 迁移机制。大改 step 结构、工具签名、状态类型后，旧快照在新代码上恢复可能出错。大改走新版本，或部署前排空（drain）。</p>
+        <p>风险：core 的 workflows 里没有快照 schema 迁移机制。大改 step 结构、工具签名、状态类型后，旧快照在新代码上恢复可能出错。大改走新版本，或部署前排空（drain）。升级到 1.86.0 这一带还有两条。换执行引擎（<code>durable.executionEngine</code>）前，让旧引擎上的 run 跑完，挂起的也处理完，新引擎不接管旧 run。<code>@mastra/libsql</code> 1.32.0 起有 workflow step guard，升级前让正在跑的 evented run 结束。</p>
       </div>
       <p class="src">依据：workflows/workflow.ts:5051-5091、:5550；agent/thread-stream-runtime.ts:3653、:937；server/handlers/agent-versions.ts；agent/agent.ts:8607；deployer/src/server/handlers/restart-active-runs.ts:18。</p>
 
@@ -1903,7 +1909,7 @@ server {
       <p class="src">依据：端点清单与断连语义的源码核实（见「端点与屏蔽」「重连与续跑」）；nginx 指令为通用运维知识。</p>
 
       <h3 id="diagrams">架构图索引</h3>
-      <p>八张图由 Archify 生成，全部通过自动校验（schema、投递、严格检查、真实浏览器检查）。节点带源码引用，可跳到对应 commit 的 GitHub 位置。相对路径基于本文件位置。</p>
+      <p>十张图由 Archify 生成，全部通过自动校验（schema、投递、严格检查、真实浏览器检查）。节点带源码引用，可跳到对应 commit 的 GitHub 位置。相对路径基于本文件位置。</p>
       <table>
         <thead><tr><th>图</th><th>内容</th><th>锚定 commit</th></tr></thead>
         <tbody>
@@ -1915,12 +1921,15 @@ server {
           <tr><td><a href="../../.archify/architecture-mcp-old-20261022-160037/mastra-mcp-old-architecture.html">MCP 架构（旧版）</a></td><td>MCP SDK 2.2.0 时代，无 Events。与新图同布局便于对比</td><td>8271439b49</td></tr>
           <tr><td><a href="../../.archify/architecture-mcp2-events-20261022-153915/mastra-mcp2-events-architecture.html">MCP 2.0 支持（含 Events）</a></td><td>SDK 2.3.1 + SEP-3415：poll/push/webhook 投递、SignalProvider 进线程</td><td>846639e853</td></tr>
           <tr><td><a href="../../.archify/dataflow-conversation-recovery-20261026-170535/mastra-conversation-recovery-dataflow.html">会话持久化与恢复数据流</a></td><td>会话产生 → 按 step 落库 → 持久层 → 恢复入口 → 重进续跑</td><td>846639e853</td></tr>
+          <tr><td><a href="../../.archify/architecture-durable-agent-engine-20261127-095017/mastra-durable-agent-engine.html">Durable agent 执行引擎</a></td><td>原生 Agent 选引擎 → default 或 evented 引擎 → durable 循环 → 存储、PubSub、worker、run 流、启动恢复</td><td>5b608ce195</td></tr>
+          <tr><td><a href="../../.archify/dataflow-knowledge-importer-20261127-095017/mastra-knowledge-importer-dataflow.html">Knowledge importer 运行流程</a></td><td>调度 → runKnowledgeImport → import(ctx) → 缓冲发批 → host 在一个事务里落库</td><td>5b608ce195</td></tr>
         </tbody>
       </table>
-      <p class="src">图的 candidate 和校验回执在 <code>.archify/</code> 各子目录。</p>
+      <p class="src">图的 candidate 和校验回执在 <code>.archify/</code> 各子目录。后两张的回执在各自子目录的 <code>review-2/</code> 里，子目录顶层的是第一次布局的回执。</p>
 
-      <h2 id="update">11 更新梳理（2026-10-23 → 11-19）</h2>
-      <p>本轮 upstream 从 <code>cabb887412</code> 快进到 <code>10b2d3fc6d</code>，共 1592 个 commit（336 feat、690 fix）。下面按主题梳理。逐条来源是各包 <code>CHANGELOG.md</code> 和对应 PR。</p>
+      <h2 id="update">11 更新梳理（2026-10-23 → 11-27）</h2>
+      <p>11-19 轮：upstream 从 <code>cabb887412</code> 快进到 <code>10b2d3fc6d</code>，共 1592 个 commit（336 feat、690 fix）。下面按主题梳理。逐条来源是各包 <code>CHANGELOG.md</code> 和对应 PR。</p>
+      <p>11-27 轮：upstream 从 <code>c736a22be04</code> 合并到 <code>06cd8b927b3</code>，共 315 个 commit（77 feat、140 fix）。其中一部分进了 <code>@mastra/core</code> 和 <code>@mastra/server</code> 的 1.86.0 正式版（2026-11-25 发布）。其余在 1.87.0 alpha，还没正式发布，API 还可能变。下面标「alpha」的条目属于后者。每条进哪个版本，以各包 CHANGELOG 为准。</p>
 
       <h3 id="update-versions">版本对照</h3>
       <table>
@@ -1936,6 +1945,24 @@ server {
           <tr><td><code>@mastra/playground-ui</code></td><td>66.0.0-alpha</td><td>70.1.0</td><td>Knowledge 页、spans 可组合、oxlint 规则</td></tr>
         </tbody>
       </table>
+      <p>11-27 轮。版本号取自 npm 的 <code>latest</code>（2026-11-25 发布），不是 upstream main 上的 alpha 号：</p>
+      <table>
+        <thead><tr><th>包</th><th>11-19 轮</th><th>11-27 轮</th><th>主要落点</th></tr></thead>
+        <tbody>
+          <tr><td><code>@mastra/core</code></td><td>1.85.0</td><td>1.86.0</td><td>原生 durable 执行引擎、Knowledge importer、channel 工具、run 归属修复。alpha 通道在 1.87.0-alpha.3</td></tr>
+          <tr><td><code>@mastra/server</code></td><td>1.85.0</td><td>1.86.0</td><td>signal 和 message 路由检查 run 归属；实验触发路由加 <code>durable</code></td></tr>
+          <tr><td><code>@mastra/memory</code></td><td>1.41.2</td><td>1.41.3</td><td>turn 标签转义；要求 core ≥ 1.85.1；observational memory 的 CPU 和重试修复</td></tr>
+          <tr><td><code>@mastra/libsql</code></td><td>没抄</td><td>1.32.0</td><td>workflow step guard，worker 可以接手；要求 core ≥ 1.86.0</td></tr>
+          <tr><td><code>@mastra/pg</code></td><td>没抄</td><td>1.38.0</td><td>Knowledge importer 存储、事务 deadline、<code>pgKnowledgeTransactionClient()</code></td></tr>
+          <tr><td><code>@mastra/mcp</code></td><td>2.10.0</td><td>2.11.0</td><td>安装体积少约 38 MB；<code>mastra-mcp generate</code> 要自己装两个 dev 依赖</td></tr>
+          <tr><td><code>@mastra/client-js</code></td><td>1.61.1</td><td>1.62.0</td><td><code>triggerDatasetExperiment()</code> 加 durable 选项</td></tr>
+          <tr><td><code>@mastra/react</code></td><td>1.15.2</td><td>1.16.0</td><td><code>useMemoryThreadMessages</code> 加 <code>agentId</code></td></tr>
+          <tr><td><code>@mastra/ai-sdk</code></td><td>1.12.0</td><td>1.12.1</td><td>只有打包变化。stack trace 修复在 1.12.2 alpha</td></tr>
+          <tr><td><code>@mastra/deployer-cloudflare</code></td><td>没抄</td><td>1.3.0</td><td>默认压缩 Worker</td></tr>
+          <tr><td><code>mastra</code> CLI / <code>create-mastra</code></td><td>1.40.1</td><td>1.40.2</td><td>小版本</td></tr>
+        </tbody>
+      </table>
+      <p>这一轮所有 Mastra 包都不再发布 <code>.js.map</code> 和 <code>.d.ts.map</code>。装包更小，跳转定义和类型检查不受影响。</p>
 
       <h3 id="update-knowledge">Knowledge（alpha）</h3>
       <p>core 1.82.0 加的大功能。给 agent 一块跨会话、跨 agent 共享的知识层：制度、产品文档、惯例、runbook、别的 agent 学到的东西。</p>
@@ -1946,7 +1973,7 @@ server {
         <li>钉住的 page 经 signals 进 agent 上下文，运行中改了，下一轮生效。</li>
         <li>与 Memory 的分工：Memory 管一次会话内的延续，Knowledge 管跨会话、跨 agent、跨人的共享信息。</li>
       </ul>
-      <p>alpha 边界（文档 <code>knowledge/overview.mdx</code> 原文）：API 会在版本间变；能读多个 scope 的 agent 可能把内容从一个 scope 带进另一个；没有内置 importer（平台有）；旧页面不会过期。</p>
+      <p>alpha 边界（文档 <code>knowledge/overview.mdx</code>，11-27 按新文档改写）：API 会在版本间变；能读多个 scope 的 agent 可能把内容从一个 scope 带进另一个；没有现成的内置 importer，可以经 API 写内容，1.86.0 起也可以自己写 importer（见下方 <a href="#update-knowledge-importer">Knowledge importer</a>），Mastra Platform 提供 importer；旧页面不会过期。</p>
       <p>配套变化：</p>
       <ul>
         <li>1.82.0 删掉旧的 <code>experimental_subconscious</code> 和 Memory 的 <code>knowledge</code> 选项。设了会抛错，提示把 Knowledge 挂到 agent 上。</li>
@@ -1982,6 +2009,326 @@ server {
         <li>v2 自动瘦身：step 重写时删旧行（含 <code>foreach</code> 进度）；run 结束时删掉 run 和嵌套 run 都不再读的旧状态版本。durable agent 在 pg 上等审批时，存下的 run 从 275 kB 降到 132 kB。</li>
         <li>存储升级：<code>init()</code> 给 <code>mastra_workflow_run_entries</code> 加 <code>first_seq</code> 列，保持 step 首次写入的顺序；升级前的老 run 照常工作。pg / libsql 现在要求 <code>@mastra/core</code> ≥ 1.86.0。</li>
       </ul>
+
+      <h3 id="update-durable-engine">Durable 执行引擎原生化（1.86.0）</h3>
+      <p>这是 1.86.0 最大的架构变化。1.85.0 以前，Agent 的 <code>durable</code> 只管 resumable stream，不开 checkpoint。要让 agent 循环能存档、重启续跑，必须用包装函数。1.86.0 起，原生 <code>Agent</code> 设一个字段就行。</p>
+      <p>配图：<a href="../../.archify/architecture-durable-agent-engine-20261127-095017/mastra-durable-agent-engine.html">Durable agent 执行引擎</a>。</p>
+      <p>旧写法（1.85.0 及以前）：</p>
+      <figure>
+        <figcaption><code>stream()</code> 返回句柄。模型输出在 <code>.output</code>。</figcaption>
+        <pre>import { Agent } from '@mastra/core/agent'
+import { createDurableAgent } from '@mastra/core/agent/durable'
+
+const agent = new Agent({ id: 'researcher', name: 'Researcher', instructions: '...', model: '...' })
+export const durableResearcher = createDurableAgent({ agent })
+
+const { output, runId, cleanup } = await durableResearcher.stream('...')
+for await (const chunk of output.fullStream) { /* 处理每个 chunk */ }
+cleanup()</pre>
+      </figure>
+      <p>新写法（1.86.0）：</p>
+      <figure>
+        <figcaption><code>stream()</code> 直接返回模型输出，和普通 Agent 一样。<code>output.runId</code> 用于重连。</figcaption>
+        <pre>import { Agent, type AgentStreamOutput } from '@mastra/core/agent'
+
+export const researcher = new Agent({
+  id: 'researcher',
+  name: 'Researcher',
+  instructions: 'You research topics thoroughly.',
+  model: 'openai/gpt-5-mini',
+  durable: { executionEngine: 'default' }, // 或 'evented'
+})
+
+const output: AgentStreamOutput = await researcher.stream('Research quantum computing')
+console.log(await output.text)
+output.cleanup?.()</pre>
+      </figure>
+      <ul>
+        <li>旧的包装函数都还在，返回值不变。<code>createDurableAgent()</code> 和 <code>createEventedAgent()</code> 在 <code>@mastra/core/agent/durable</code>。<code>createInngestAgent()</code> 在 <code>@mastra/inngest</code>。</li>
+        <li>两个引擎。<code>'default'</code> 在当前进程里跑，流可以直接 await，不需要外部组件。<code>'evented'</code> 把 run 拆成一个个事件推进，可以由多个 worker 分担，调用方通过 PubSub 跟看。本地单进程用默认的 <code>EventEmitterPubSub</code> 就能试 evented。</li>
+        <li>evented 要跑在多个进程上，要同时有两样东西。一样是会重投未确认消息的 PubSub：Redis Streams、Valkey Streams、Google Cloud Pub/Sub。另一样是支持 workflow step guard 的存储：<code>@mastra/pg</code>、<code>@mastra/libsql</code>。<code>EventEmitterPubSub</code> 和 <code>UnixSocketPubSub</code> 不重投，不要拿它们跨进程跑 evented。配了撑不住多进程的组合时，Mastra 第一次建 evented run 时打一条警告，<code>MASTRA_DISABLE_EVENTED_SETUP_WARNING=true</code> 可以关掉。自定义 PubSub 用 <code>redeliversUnacked</code> 和 <code>deliversAcrossProcesses</code> 两个属性说明自己的能力。</li>
+        <li>Agent 没注册到 Mastra 上，或者 Mastra 的 workflows 存储不支持并发更新时，evented 退回进程内的 durable 执行。</li>
+        <li>Mastra 级默认值是 <code>new Mastra({ durable: { executionEngine: 'default' }, agents: { researcher } })</code>。Agent 自己的设置优先。引擎在注册或第一次执行时定下，之后不变。</li>
+        <li><code>durable: true</code> 的意思变了：开 resumable stream 发布，并继承 Mastra 的引擎默认值。<code>durable: false</code> 两样都关。Mastra 没设默认值时，两个布尔值都不开 checkpoint。早期 alpha 里的 <code>executionEngine: 'durable'</code> 改名为 <code>'default'</code>。</li>
+        <li>其它选项。<code>durable.maxSteps</code>：优先级是本次调用的 <code>maxSteps</code>、<code>defaultOptions.maxSteps</code>、<code>durable.maxSteps</code>，都没设是 5。<code>durable.storageVersion</code> 是实验性的，默认 <code>1</code> 存完整快照，<code>2</code> 用 run journal 只存变化。<code>durable.shouldPersistSnapshot</code> 决定存哪些 checkpoint。</li>
+        <li>返回值。<code>stream()</code> 和 <code>resumeStream()</code> 的公开类型仍是 <code>MastraModelOutput</code>。要拿 <code>abort()</code>、<code>cleanup()</code>、<code>threadId</code>、<code>resourceId</code>，把输出标成 <code>AgentStreamOutput</code>。<code>generate()</code> 的结果形状不变。</li>
+        <li>服务端。设了 <code>executionEngine</code> 的 Agent 和 <code>createDurableAgent()</code> 的 Agent 走同一套 run 路由，审批和 resume 路由带 run 归属检查。<code>POST /agents/:agentId/runs/:runId/abort</code> 和 <code>POST /agents/:agentId/recover</code> 对它们可用。</li>
+        <li>重启后续跑要两样：持久存储，和 Mastra 上的 <code>recovery.durableAgents: 'auto'</code>（默认是 <code>off</code>）。<code>off</code> 时按默认策略只在 <code>mastra.shutdown()</code> 开始之后到达的 step 边界存 checkpoint。在那之前崩溃的 run 没有可恢复的存档。</li>
+        <li>新状态 <code>interrupted</code>。<code>mastra.shutdown()</code> 停掉一个 durable run 时（例如滚动重启），<code>subscribeToThread({ withRunStatus: true })</code> 报 <code>interrupted</code>，不再报 <code>failed</code>。它不是终态，恢复后的输出和最终状态跟在同一个订阅上。普通 Agent 被 shutdown 停掉仍报 <code>failed</code>。<code>useChat</code> 仍把 <code>interrupted</code> 当作 run 结束。</li>
+        <li><code>@mastra/libsql</code> 1.32.0 加了 workflow step guard：worker 中途停掉时，另一个 worker 能接上这一步。要求 core ≥ 1.86.0。多机部署要用 sqld 或 Turso 这类 libSQL server。</li>
+        <li>换引擎前，先停新 run，让旧引擎上的 run 跑完，挂起的也处理完。新引擎不接管旧引擎的 run。</li>
+        <li>durable 实验。<code>dataset.startExperimentAsync({ durable: true })</code> 把实验跑成 evented workflow，每个 item 一步。进程停了或重新部署，实验不会卡在 <code>running</code>。durable run 只接受能序列化的配置，例如已注册的 target、scorer id、纯 JSON 的 <code>requestContext</code>。不满足时抛 <code>EXPERIMENT_NOT_DURABLE</code>。durable run 不保留发起请求的登录用户：token、user、roles、permissions 会从 <code>requestContext</code> 里去掉。</li>
+      </ul>
+      <p>alpha（1.87.0，未正式发布）：</p>
+      <ul>
+        <li>workflow 的租约 <code>leaseTtlMs</code>。默认引擎的 run 租约原来固定 15 秒。一个 step 同步阻塞事件循环超过 15 秒，另一个实例就把 run 接走，同一个 step 在那边再卡一次。更好的办法是把重计算挪到 worker thread。租约变长，实例崩溃后的恢复也跟着变慢。</li>
+        <li>run 被别的实例接走后，原进程的写入会被存储拒绝。它的 <code>start()</code>、<code>resume()</code>、<code>restart()</code>、<code>timeTravel()</code> 抛 <code>STORAGE_RUN_FENCE_CONFLICT</code>。HTTP 返回 409，以前是 500。</li>
+        <li>replay 游标变成不透明值。内置的 Redis、Valkey、内存 cache 新建的日志，从时钟推出的值开始编号。run 的事件保留时间从一周缩到 24 小时。</li>
+      </ul>
+      <figure>
+        <figcaption>alpha：<code>leaseTtlMs</code> 可以设在 workflow 上，也可以只设在一次 run 上。</figcaption>
+        <pre>const report = createWorkflow({
+  id: 'report',
+  inputSchema,
+  outputSchema,
+  options: { leaseTtlMs: 60_000 },
+})
+  .then(render)
+  .commit()
+
+const run = await report.createRun({ leaseTtlMs: 120_000 })</pre>
+      </figure>
+      <figure>
+        <figcaption>alpha：<code>observe()</code> 的 <code>offset</code>。旧写法按收到的 chunk 数，新写法用最后一个见过的 index。</figcaption>
+        <pre>// 旧：数收到了几个 chunk。现在会重放整段历史。
+const { output } = await agent.observe(runId, { offset: received.length })
+
+// 新：最后收到的那个带 index 的 chunk，index + 1
+const { output } = await agent.observe(runId, { offset: lastChunk.index + 1 })</pre>
+      </figure>
+      <p class="src">依据：docs/src/content/en/docs/harness/durable-agents.mdx；reference/agents/durable-agent.mdx；docs/server/pubsub.mdx；docs/workflows/overview.mdx；docs/evals/experiments.mdx；core 和 server 的 CHANGELOG 1.86.0、1.87.0-alpha；libsql CHANGELOG 1.32.0。</p>
+
+      <h3 id="update-knowledge-importer">Knowledge importer 与 knowledge_activity（1.86.0）</h3>
+      <p>1.86.0 给 Knowledge 加了两样：自己写的 importer（实验性），和一个查改动的工具。</p>
+      <p>配图：<a href="../../.archify/dataflow-knowledge-importer-20261127-095017/mastra-knowledge-importer-dataflow.html">Knowledge importer 运行流程</a>。</p>
+      <p>Importer 把别的系统的内容（帮助台、工单）同步进 Knowledge。你写一个类，读源系统，一条一条交 item。Knowledge 决定每条放在哪，写成 page，并记住哪个 page 来自哪条 item。下一次运行更新这些 page，不再新增。</p>
+      <figure>
+        <figcaption>一个 importer 类。只读一页，省略了上游文档里的翻页循环。<code>htmlToMarkdown()</code> 代表你自己的转换。实例是一个 binding：<code>id</code>、<code>target</code>、<code>settings</code>、<code>credentials</code>。</figcaption>
+        <pre>import { KnowledgeImporter, KnowledgeImporterSourceError } from '@mastra/core/knowledge'
+import { z } from 'zod'
+
+const settings = z.object({ baseUrl: z.string().url(), folder: z.string().optional() })
+
+export class HelpDeskImporter extends KnowledgeImporter({
+  id: 'help-desk',
+  label: 'Help desk',
+  description: 'Imports help desk articles and folders.',
+  settings,
+  credentials: { apiKey: { description: 'Help desk API key' } },
+}) {
+  async import(ctx) {
+    const since = (await ctx.state.get('updatedSince')) ?? '1970-01-01T00:00:00Z'
+    const url = new URL('/api/articles', ctx.settings.baseUrl)
+    url.searchParams.set('updatedSince', since)
+
+    const response = await ctx.fetch(url, {
+      headers: { authorization: `Bearer ${ctx.credentials.apiKey}` },
+    })
+    if (!response.ok) {
+      throw new KnowledgeImporterSourceError('Help desk request failed', response.status)
+    }
+    const { articles } = await response.json()
+
+    for (const article of articles) {
+      if (article.archived) {
+        await ctx.items.remove(String(article.id))
+        continue
+      }
+      await ctx.items.upsert({
+        sourceId: String(article.id),
+        parent: article.folderId === null ? null : `folder-${article.folderId}`,
+        title: article.title,
+        body: htmlToMarkdown(article.html),
+      })
+    }
+    const last = articles.at(-1)
+    if (last) await ctx.state.set('updatedSince', last.updatedAt)
+  }
+}</pre>
+      </figure>
+      <figure>
+        <figcaption>注册进 <code>Knowledge</code>，再按 binding 跑。目标位置写成 <code>&lt;scope&gt;#&lt;path&gt;</code>。</figcaption>
+        <pre>import { Knowledge, knowledgeMemoryScopes } from '@mastra/core/knowledge'
+import { LibSQLStore } from '@mastra/libsql'
+import { HelpDeskImporter } from './importers/help-desk'
+
+export const knowledge = new Knowledge({
+  id: 'company',
+  storage: new LibSQLStore({ id: 'knowledge', url: 'file:./knowledge.db' }),
+  scopes: {
+    ...knowledgeMemoryScopes(),
+    'support:$orgId': {
+      description: 'Help desk articles',
+      belongsTo: 'org:$orgId',
+      access: [{ principal: 'org:$orgId', role: 'viewer' }],
+    },
+  },
+  importers: [
+    new HelpDeskImporter({
+      id: 'acme-help-desk',
+      target: 'support:acme#help-desk',
+      settings: { baseUrl: 'https://help.acme.example' },
+      credentials: { apiKey: process.env.HELP_DESK_API_KEY },
+    }),
+  ],
+})
+
+// Knowledge 不负责调度。用自己的 cron 或 scheduled workflow 调 run()。
+const result = await knowledge.importers!.run('acme-help-desk')
+if ('outcome' in result) console.log(result.outcome, result.counts)</pre>
+      </figure>
+      <ul>
+        <li>item 用源系统自己的 <code>sourceId</code>，不写 page 路径。<code>parent</code> 指另一个 item 的 <code>sourceId</code>。子项可以先于父项到达。只想先建目录，用 <code>ctx.items.declare({ sourceId, title })</code>。</li>
+        <li><code>ctx.items</code> 的每个调用都要 await。item 先缓冲。攒到 200 条、调用 <code>ctx.state.set()</code>、<code>import</code> 返回、或最老的一条等了 30 秒，就发一批。每批在一个存储事务里和游标一起提交。</li>
+        <li><code>ctx.state.set()</code> 写在它覆盖的 item 之后，不要写在前面。</li>
+        <li><code>ctx.fetch</code> 绑定 run 的 <code>ctx.signal</code>。它不重试，限流要自己处理。源系统出错时抛 <code>KnowledgeImporterSourceError</code>，带上 HTTP 状态码。</li>
+        <li><code>ctx.items.remove(sourceId)</code> 只在源系统说这条没了时调用。一次没出现在结果里的 item 不会被删。</li>
+        <li>改设置时保留 binding 的 <code>id</code>，Knowledge 按 <code>id</code> 追踪 page。不同 binding 的目标可以重叠或嵌套。删掉一个 binding 时调 <code>retireBinding(id)</code>。它的 page 留下，变成普通 page。</li>
+        <li>同一个 binding 同时只跑一个 run。第二个调用返回 <code>skipped</code>。</li>
+        <li>Knowledge 存储要支持事务：<code>@mastra/libsql</code>、<code>@mastra/pg</code> 或内存存储。表用 <code>await knowledge.importers.init()</code> 建。</li>
+        <li>importer 在别处跑、由服务端落库的，用 <code>createKnowledgeImporterHost(knowledge, { bindings })</code> 和 <code>runKnowledgeImport()</code>。</li>
+      </ul>
+      <p>1.86.0 里 Knowledge 的其它变化：</p>
+      <ul>
+        <li><code>knowledge_activity</code> 读工具。读工具组从 3 个变 4 个：<code>knowledge_list</code>、<code>knowledge_search</code>、<code>knowledge_read</code>，加上它。agent 可以问「Q3 以来改了什么」。参数是 <code>since</code>、<code>until</code>、<code>from</code>、<code>order</code>、<code>limit</code>、<code>cursor</code>。它只列 run 能读的 page 和 note 的改动。存储要支持按日期过滤：内存、LibSQL、PostgreSQL。按名字列全读工具的代码要加上它。</li>
+        <li><code>Knowledge.removePage()</code> 和 <code>upsertPage()</code> 加了可选的 <code>expected: { id, version }</code>。对不上时抛 <code>KnowledgeConflictError</code>，什么都不写。</li>
+        <li><code>knowledge.storage.transaction(operation, { deadlineAt })</code>：到期回滚并抛 <code>KnowledgeTransactionDeadlineError</code>。PostgreSQL 上等连接、每条语句、等锁都算在期限内。</li>
+        <li><code>knowledge.createTools()</code> 加了 <code>principals</code> 和 <code>author</code>。不在 agent run 里也能用 Knowledge 工具，例如 MCP server 代外部 agent 调用。<code>principals</code> 必须来自 host，不能来自请求。</li>
+        <li>列表的 cursor 畸形时抛 <code>KnowledgeInvalidCursorError</code>，HTTP 返回 400。以前是 500。</li>
+      </ul>
+      <figure>
+        <figcaption>1.86.0 之前的旧写法，和 1.86.0 的新写法。</figcaption>
+        <pre>// 旧：读到什么就删什么，中间被人改了也不知道
+await knowledge.removePage({ scope: 'docs:acme', path: 'faq' })
+
+// 新：page 还是读到的那个版本才删
+await knowledge.removePage({
+  scope: 'docs:acme',
+  path: 'faq',
+  expected: { id: page.id, version: page.version },
+})</pre>
+      </figure>
+      <p>alpha（1.87.0，未正式发布）：</p>
+      <ul>
+        <li><code>knowledge_activity</code> 加 <code>order: 'oldest'</code>。agent 可以按顺序处理改动，从上次的位置接着读。PostgreSQL 升级时会重写 activity 表，表上有排他锁。</li>
+        <li><code>knowledge_search</code> 的 page 结果带 <code>snippet</code>、<code>line</code>、<code>matchingLines</code>，直接看到命中位置。</li>
+        <li><code>runKnowledgeImport</code> 加 <code>maxFlushBytes</code> 和 <code>flushAfterMs</code>。</li>
+      </ul>
+      <p class="src">依据：docs/src/content/en/docs/knowledge/importers.mdx；reference/knowledge/knowledge-tools.mdx；docs/knowledge/overview.mdx；core CHANGELOG 1.86.0、1.87.0-alpha；pg CHANGELOG 1.38.0。</p>
+
+      <h3 id="update-channel-tools">Channel 工具与回复模式（1.86.0）</h3>
+      <p>1.86.0 给接了 channel 的 agent 一组通用工具：读消息、发消息。以前 channel 工具只有 <code>add_reaction</code> 和 <code>remove_reaction</code>。</p>
+      <figure>
+        <figcaption><code>createChannelTools()</code> 不会自动加工具。要自己展开进 <code>tools</code>。<code>channelIds</code> 要写带平台前缀的全名。</figcaption>
+        <pre>import { Agent } from '@mastra/core/agent'
+import { createChannelTools } from '@mastra/core/channels'
+import { createSlackAdapter } from '@chat-adapter/slack'
+
+const agent = new Agent({
+  id: 'channel-tools-agent',
+  name: 'Channel Tools Agent',
+  instructions: 'You are a helpful assistant.',
+  model: 'openai/gpt-5-mini',
+  tools: {
+    ...(await createChannelTools({
+      channels: 'selected',
+      channelIds: ['slack:C0123ABC'],
+      access: 'read',
+    })),
+  },
+  channels: { adapters: { slack: createSlackAdapter() } },
+})</pre>
+      </figure>
+      <ul>
+        <li>工具：<code>fetchMessages</code>、<code>fetchChannelMessages</code>、<code>fetchThread</code>、<code>listThreads</code>、<code>getThreadParticipants</code>、<code>getChannelInfo</code>、<code>postMessage</code>、<code>postChannelMessage</code>。<code>directMessages: 'anyone'</code> 时再加 <code>sendDirectMessage</code>。</li>
+        <li>范围。<code>channels: 'session'</code> 是默认值，只能读写当前会话所在的频道。<code>'selected'</code> 加上 <code>channelIds</code> 里的频道。<code>'all'</code> 是 bot 加入的所有频道。</li>
+        <li><code>access: 'read'</code>：这些频道都能读，只能在当前会话的频道里发。</li>
+        <li>别人的私聊（包括群私聊）永远读不到。工具发消息不问审批。工具要 zod 4.2 以上。</li>
+        <li>每次调用按发起调用的 run 找 chat thread。所以定时任务、Studio prompt 这类不是从消息开始的 run，在 channel thread 上也能用。</li>
+        <li><code>@mastra/slack</code> 1.10.0 加了 <code>createSlackTools()</code>：<code>findChannel</code>、<code>findUser</code>、<code>searchMessages</code>、<code>downloadSlackAttachment</code>。前两个查整个 workspace，不受上面范围的限制。</li>
+      </ul>
+      <p>alpha（1.87.0，未正式发布）：</p>
+      <ul>
+        <li>adapter 选项 <code>replyMode: 'tool'</code>：agent 只通过 <code>reply_in_thread</code> 工具发言。正文和工具调用不进 thread，typing 状态显示当前在做什么，五分钟没发帖会被提醒。只在 Slack 上测过。</li>
+        <li>adapter 选项 <code>threadLink</code>：新 thread 的第一条回复末尾加一个到 Web UI 的链接。链接不存进 memory。</li>
+        <li><code>agent.channels.subscribeThread({ thread, resourceId })</code>：bot 自己开的 thread（例如定时摘要）也能收到不带 @ 的回复。</li>
+        <li><code>createChannelAttachFileTool()</code> 给 <code>attach_file</code> 工具。<code>ChannelToolAnnouncementProcessor</code> 在工具成功后往 thread 发公告。错误卡片可以带 Continue 按钮（<code>CONTINUE_RUN_ACTION_ID</code>）。</li>
+        <li>一个 step 里的文字合成一条消息发。以前每个文字块一条。</li>
+      </ul>
+      <p class="src">依据：reference/agents/channels.mdx；docs/channels.mdx；reference/channels/thread-link.mdx；core CHANGELOG 1.86.0、1.87.0-alpha；slack CHANGELOG 1.10.0、1.11.0-alpha.0。</p>
+
+      <h3 id="update-security">1.86.0 安全修复</h3>
+      <ul>
+        <li>run 归属（core 和 server 1.86.0）。<code>POST /agents/:agentId/signals</code>、<code>/send-message</code>、<code>/queue-message</code>、<code>/queue-signal</code> 原来接受任何 <code>runId</code>。配了 <code>mapUserToResourceId</code> 时，一个登录用户可以把输入送进另一个用户正在跑的 run。现在 run 不属于调用方的 resource 时返回 403。新增 <code>agent.getThreadRunTarget(runId)</code>，返回 run 所在的 resource 和 thread。</li>
+      </ul>
+      <p>core 层不做授权。只带 <code>runId</code> 的 target 会被信任。<code>runId</code> 来自不可信输入时，自己先核对：</p>
+      <figure>
+        <figcaption><code>callerResourceId</code> 要来自已登录的用户，不能来自请求体。</figcaption>
+        <pre>const target = agent.getThreadRunTarget(runId)
+if (!callerResourceId || !target?.resourceId || target.resourceId !== callerResourceId) {
+  throw new Error('Run not found')
+}
+await agent.sendSignal(signal, { runId })</pre>
+      </figure>
+      <ul>
+        <li>用户消息里的 turn 标签（core 1.86.0 和 memory 1.41.3）。用户消息按原样存储。送给模型前，turn 标签会被转义，除非服务端用 <code>asUserTurn</code> 构造消息。HTTP 客户端设不了这个标记。memory 1.41.3 要求 core ≥ 1.85.1。</li>
+      </ul>
+      <figure>
+        <figcaption>要带发言人字段的用户消息，由服务端构造。</figcaption>
+        <pre>import { asUserTurn } from '@mastra/core/memory'
+
+// speaker 字段取自已验证的 session，不取自请求体
+const message = asUserTurn(
+  { id: session.user.id, name: session.user.name, role: session.user.role },
+  body.text,
+)
+await agent.generate([message])</pre>
+      </figure>
+      <ul>
+        <li><code>LocalSandbox</code> 的只读挂载（core 1.86.0）。在 <code>seatbelt</code> 或 <code>bwrap</code> 隔离下，<code>readOnly: true</code> 的 <code>LocalFilesystem</code> 挂载原来能被 shell 命令写。现在只能读。新增 <code>nativeSandbox.denyWritePaths</code>，可以禁止写工作区里的特定路径。</li>
+        <li>SSO 回调和 Clerk（server 1.86.0，<code>@mastra/auth-clerk</code> 1.4.1）。同时带 <code>code</code> 和 <code>error</code> 的非法回调会被拒绝，并返回身份厂商的错误。Clerk 支持 Studio 登录必须用 PKCE 的 OAuth 应用。</li>
+        <li>PII 检测器（core 1.86.0）。模型流出很长的连续字符时，处理会卡住输出。已修。</li>
+      </ul>
+      <p>alpha（1.87.0，未正式发布）里的两个：</p>
+      <ul>
+        <li><code>@mastra/ai-sdk</code> 1.12.2 alpha：<code>chatRoute</code> 和 <code>handleChatStream</code> 不再把服务端 stack trace 发给聊天客户端。流里的错误只留错误名、消息和少数安全字段。自定义 <code>onError</code> 仍拿到完整错误。缺 resource ID 时返回 400，以前是 500。</li>
+        <li><code>@mastra/client-js</code> 1.62.1 alpha：<code>processDataStream()</code> 在回复中途出错时 reject。以前它带着半截文字 resolve，错误只打日志，<code>useChat</code> 把半截回答显示成完整的。</li>
+      </ul>
+      <figure>
+        <figcaption>旧写法不 catch，半截回答被当成完整。新写法要处理 reject。</figcaption>
+        <pre>const response = await agent.stream('Write a long answer')
+try {
+  await response.processDataStream({ onChunk: (chunk) =&gt; render(chunk) })
+} catch (error) {
+  showError(error) // 例如模型服务中途过载
+}</pre>
+      </figure>
+      <p class="src">依据：core 和 server 的 CHANGELOG 1.86.0、1.87.0-alpha；memory CHANGELOG 1.41.3；ai-sdk CHANGELOG 1.12.2-alpha.0；client-js CHANGELOG 1.62.1-alpha.0；PR #30902、#30593、#25146、#24328、#31472、#31475。</p>
+
+      <h3 id="update-186-misc">1.86.0 其它变化与 1.87 alpha 预览</h3>
+      <ul>
+        <li><code>finish</code> chunk 加了 <code>stopCause</code>，说明循环为什么不调模型了。<code>stepResult.reason</code> 分不出来：只要停在工具调用上就报 <code>'tool-calls'</code>。值有六个：<code>model_finished</code>、<code>max_steps</code>、<code>stop_condition</code>、<code>iteration_hook</code>、<code>feedback_complete</code>、<code>delegation</code>。Studio 靠它判断要不要提示「达到 maxSteps」。</li>
+        <li><code>MastraMemory.getWorkingMemoryInstruction()</code>：自定义 memory 可以改 working memory 的指令。返回 <code>undefined</code> 用内置的，返回空串就不发。<code>Memory</code> 子类覆盖 <code>getWorkingMemoryToolInstruction()</code> 现在也生效。</li>
+        <li><code>agent_end</code> 事件加了 <code>abortReason: 'memory-failure'</code>。observational memory 的 observer 或 reflector 失败导致 run 停止时带上它。<code>reason</code> 仍是 <code>'aborted'</code>，原有处理不用改。</li>
+        <li><code>mastra.getWorkspaceById(id, { optional: true })</code>：id 不存在时返回 <code>undefined</code>，不再记日志并抛错。</li>
+        <li><code>MessageList.markForResave(message)</code>：把列表里已有的消息标记为下次保存时重写。observational memory 用它回写 token 计数。</li>
+        <li><code>@mastra/deployer-cloudflare</code> 1.3.0 默认压缩 Worker，上传体积约减半。函数名和类名保留。要让 stack trace 映射回自己的 <code>src/</code>，再设 <code>bundler: { sourcemap: true }</code>。</li>
+        <li><code>@mastra/mcp</code> 2.11.0 安装体积少约 38 MB。用 <code>mastra-mcp generate</code> 的项目要自己加两个 dev 依赖。</li>
+        <li><code>@mastra/evals</code> 1.10.12 修了四个 scorer。完整性 scorer 不再忽略非拉丁文字。语气 scorer 现在每句都算。内容相似度 scorer 的 <code>ignoreWhitespace</code> 生效。文本差异 scorer 的 <code>changes</code> 现在计入移动的词。</li>
+        <li>observational memory（memory 1.41.3）。线程标题用用户消息的语言写。账号没额度时，不再把整个重试预算跑完（默认 9 次，约 4 分钟）。</li>
+        <li><code>@mastra/connect</code> 1.5.0。新的 <code>ConnectEvents</code> 类统一接收 provider 事件。两处 breaking：默认丢弃未验证的事件，要 <code>includeUnverified</code> 才收。<code>ConnectEvent.integrationId</code> 改名为 <code>provider</code>。新增 Figma、Confluence、Zendesk toolset 和自托管 GitLab。peer 要求 core ≥ 1.86.0。</li>
+      </ul>
+      <figure>
+        <figcaption>三个旧写法在新版本的行为。</figcaption>
+        <pre>// 1. 等后台命令的输出。wait: true 被忽略，立即返回。
+{ pid, wait: true }        // 旧
+{ pid, waitSeconds: 60 }   // 新：最多等 60 秒
+
+// 2. Cloudflare 部署。默认压缩。要关掉就显式传参。
+new CloudflareDeployer({ name: 'my-worker', minify: false })
+
+// 3. mastra-mcp generate 要的两个 dev 依赖。
+npm install --save-dev tsx@4 json-schema-to-typescript-lite@15</pre>
+      </figure>
+      <p>alpha（1.87.0，未正式发布）：</p>
+      <ul>
+        <li><code>PROVIDER_FAILURE_KINDS</code> 从 <code>@mastra/core/error</code> 导出，是 <code>ProviderFailureKind</code> 的全部取值。Agent controller 的会话现在把模型切换（fallback）作为回复的一部分流出来。</li>
+        <li><code>AgentController</code> 加了三个开关：<code>includeDefaultGateways</code>、<code>modelFallbacks</code>、<code>registerAgents</code>。</li>
+        <li><code>createRecreateSandboxTool()</code>：sandbox 没响应时，agent 可以重建它。没另存的东西会丢。</li>
+        <li><code>skill_read</code> 能把 skill 里的 PNG、JPEG、WebP、PDF（10 MiB 以内）作为媒体交给模型。</li>
+        <li><code>@mastra/connect</code> 1.6.0 alpha：<code>ConnectEventWorker</code> 和 <code>ConnectEventSignals</code>。旧的 <code>EventsClient</code>、<code>connectEvents()</code> 不再导出。只影响预发布版。</li>
+      </ul>
+      <p class="src">依据：core CHANGELOG 1.86.0、1.87.0-alpha.0 到 alpha.3；deployer-cloudflare CHANGELOG 1.3.0；mcp CHANGELOG 2.11.0；evals CHANGELOG 1.10.12；memory CHANGELOG 1.41.3；connect CHANGELOG 1.5.0、1.6.0-alpha.0。</p>
 
       <h3 id="update-mcp">MCP 2.6 → 2.10</h3>
       <ul>
